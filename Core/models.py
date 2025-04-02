@@ -21,13 +21,18 @@ class DocumentQASystem:
             "mistral": Ollama(
                 model="mistral",
                 temperature=0.7,
-                num_ctx=4096
+                num_ctx=4096,
             ),
             "qwen": Ollama(
-                model="qwen:1.8b",
+                model="qwen2.5:7b",
                 temperature=0.5,
-                num_ctx=2048
-            )
+                num_ctx=2048,
+            ),
+            "deepseek": Ollama(
+                model="deepseek-r1:14b",
+                temperature=0.5,
+                num_ctx=2048,
+            ),
         }
 
     def _release_model_resources(self):

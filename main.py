@@ -4,7 +4,7 @@ import torch
 import logging
 from Core.models import DocumentQASystem
 from Core.document_loader import load_document
-from Utils.utils import print_help
+from Utils.utils import print_help, export_to_excel
 
 def main():
     qa_system = DocumentQASystem()
@@ -40,11 +40,14 @@ def main():
                     try:
                         start_time = time.time()
                         response = model.invoke(query)
-                        latency = time.time() - start_time
+
+                        end_time = time.time()
+                        latency = end_time - start_time
 
                         results[name] = {
                             "response": response,
-                            "latency": f"{latency:.2f}s",
+                            "latency": f"{latency:.2f}s"
+
                         }
                         # 释放资源
                         del response
@@ -56,7 +59,13 @@ def main():
                 for model, data in results.items():
                     print(f"{model.upper()}:")
                     print(f"⏱️ 响应时间: {data['latency']}")
-                    print(f"📝 响应示例: {data['response'][:150]}...\n")
+                    print(f"📝 响应示例: {data['response']}...\n")
+
+                export_file = export_to_excel(results, query)
+                if export_file:
+                    print(f"\n📊 比较结果已导出至: {os.path.abspath(export_file)}")
+                else:
+                    print("\n⚠️ 导出失败，请检查日志")
                 continue
 
             elif user_input == "/help":
@@ -107,6 +116,7 @@ def main():
                 response = f"{result['result']}\n\n📚 来源文档：{result['source_documents'][0].metadata['source']}"
             else:
                 response = qa_system.conversation_chain.predict(input=user_input)
+
         except Exception as e:
             response = f"系统错误：{str(e)}"
             logging.error(f"处理请求失败: {str(e)}")

@@ -7,6 +7,7 @@ print(f"Python版本: {sys.version}")
 print(f"numpy版本: {numpy.__version__}")
 print(f"PyTorch版本: {torch.__version__}")
 print(f"CUDA可用: {torch.cuda.is_available()}")
+print(f"所用设备：{torch.cuda.get_device_name(0)}")
 
 print("\n[关键功能验证]")
 

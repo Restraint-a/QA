@@ -1,3 +1,4 @@
+# document_loader.py
 import os
 import logging
 import torch
@@ -8,6 +9,7 @@ from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain_community.embeddings import HuggingFaceEmbeddings
 from langchain_community.vectorstores import FAISS
 
+device = "cuda" if torch.cuda.is_available() else "cpu"
 def detect_encoding(file_path, max_size=1024*1024):
     """安全检测文本文件编码"""
     try:
@@ -64,8 +66,16 @@ def load_document(qa_system, file_path):
             print(f"📝 首文本块示例：{docs[0].page_content[:200]}...")
 
         # 构造向量数据库
-        embeddings = HuggingFaceEmbeddings(model_name="sentence-transformers/all-mpnet-base-v2")
-        qa_system.vector_db = FAISS.from_documents(docs, embeddings)
+        embeddings = HuggingFaceEmbeddings(
+            model_name="sentence-transformers/all-mpnet-base-v2",
+            model_kwargs={"device": device},
+            encode_kwargs={"batch_size": 32}
+        )
+
+        qa_system.vector_db = FAISS.from_documents(
+            docs,
+            embeddings
+        )
 
         # 初始化问答链
         qa_system.qa_chain = RetrievalQA.from_chain_type(
