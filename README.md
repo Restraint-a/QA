@@ -7,6 +7,8 @@ How to use?
 
    ollama list # You will see the models have been pull.
 
+   ATTENTION: Choose the models according to your gpu memory.
+
    ollama pull mistral
 
    ollama pull qwen2.5:7b
@@ -19,7 +21,7 @@ How to use?
 
    System variable: new->OLLAMA_GPU_LAYER=cuda
 
-2. download the correct software package.
+3. download the correct software package.
 
    
 
@@ -29,7 +31,7 @@ How to use?
    conda install faiss-gpu==1.7.4
    ```
 
-3. Before run the main function, please run check_env.py and Faiss_test.py. If you get the result like this, that will be fine.
+4. Before run the main function, please run check_env.py and Faiss_test.py. If you get the result like this, that will be fine.
 
    ```
    [系统信息]
@@ -53,4 +55,4 @@ How to use?
 
    
 
-4. run main.py
+5. run main.py
