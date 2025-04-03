@@ -1,3 +1,4 @@
+# models.py
 import os
 import time
 import torch
@@ -29,7 +30,7 @@ class DocumentQASystem:
                 num_ctx=2048,
             ),
             "deepseek": Ollama(
-                model="deepseek-r1:14b",
+                model="deepseek-r1:7b",
                 temperature=0.5,
                 num_ctx=2048,
             ),

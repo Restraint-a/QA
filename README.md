@@ -11,7 +11,7 @@ How to use?
 
    ollama pull qwen2.5:7b
 
-   ollama pull deepseek-r1:14b
+   ollama pull deepseek-r1:7b
 
    ollama run mistral
 

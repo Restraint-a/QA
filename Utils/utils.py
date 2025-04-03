@@ -17,30 +17,28 @@ def print_help():
 
 def export_to_excel(results, query):
     try:
-        # 创建带时间戳的文件名
+        safe_query = query.replace("\n", " ")
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         filename = f"model_comparison_{timestamp}.xlsx"
 
-        # 转换嵌套字典为平面结构
+        # 组装数据
         data = []
         for model_name, result in results.items():
             row = {
                 "Model": model_name.upper(),
-                "Query": query,
+                "Query": safe_query,
                 "Latency": result["latency"],
                 "Response Preview": result["response"]
             }
             data.append(row)
 
-        # 创建DataFrame
+        # 构造 DataFrame
         df = pd.DataFrame(data)
-
-        # 列顺序调整
-        df = df[["Model", "Query", "Latency",  "Response Preview"]]
+        df = df[["Model", "Query", "Latency", "Response Preview"]]
 
         filename = os.path.join(DEFAULT_PATH, filename)
 
-        # 写入Excel
+        # 导出 Excel 文件
         df.to_excel(filename, index=False, engine="openpyxl")
         return filename
     except Exception as e:
