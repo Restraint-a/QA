@@ -3,6 +3,9 @@ import os
 import time
 import torch
 import logging
+
+from langchain.chains import RetrievalQA
+
 from Core.models import DocumentQASystem
 from Core.document_loader import load_document
 from Utils.utils import print_help, export_to_excel
@@ -23,6 +26,7 @@ def process_command(command: str, qa_system: DocumentQASystem) -> bool:
             print(f"无效模型，可用选项：{list(qa_system.llm_registry.keys())}")
             return False
 
+    # main.py 中的 process_command 函数部分
     elif command.startswith("/compare"):
         query_part = command[8:].strip()
         if not query_part:
@@ -46,7 +50,19 @@ def process_command(command: str, qa_system: DocumentQASystem) -> bool:
         for name, model in qa_system.llm_registry.items():
             try:
                 start_time = time.time()
-                response = model.invoke(query)
+                if qa_system.qa_chain:  # 检查是否有文档上传
+                    # 使用 qa_chain 生成基于文档的回答
+                    qa_system.qa_chain = RetrievalQA.from_chain_type(
+                        llm=model,
+                        chain_type="stuff",
+                        retriever=qa_system.vector_db.as_retriever(search_kwargs={"k": 3}),
+                        return_source_documents=True
+                    )
+                    result = qa_system.qa_chain({"query": query})
+                    response = f"{result['result']}\n来源：{result['source_documents'][0].metadata['source']}"
+                else:
+                    # 没有文档上传，直接调用模型
+                    response = model.invoke(query)
                 end_time = time.time()
                 latency = end_time - start_time
                 results[name] = {

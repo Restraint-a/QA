@@ -63,7 +63,8 @@ def load_document(qa_system, file_path):
 
         print(f"✅ 成功加载 {len(docs)} 个文本块")
         if docs:
-            print(f"📝 首文本块示例：{docs[0].page_content[:200]}...")
+            #print(f"📝 首文本块示例：{docs[0].page_content[:200]}...")
+            print(f"📝 文本：{docs}")
 
         # 构造向量数据库
         embeddings = HuggingFaceEmbeddings(
