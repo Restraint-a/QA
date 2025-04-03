@@ -23,7 +23,7 @@ def process_command(command: str, qa_system: DocumentQASystem) -> bool:
             print(f"已切换到 {model_name.upper()} 模型")
             return True
         else:
-            print(f"无效模型，可用选项：{list(qa_system.llm_registry.keys())}")
+            print(f"❌ 无效模型，可用选项：{list(qa_system.llm_registry.keys())}")
             return False
 
     # main.py 中的 process_command 函数部分
@@ -59,7 +59,7 @@ def process_command(command: str, qa_system: DocumentQASystem) -> bool:
                         return_source_documents=True
                     )
                     result = qa_system.qa_chain({"query": query})
-                    response = f"{result['result']}\n来源：{result['source_documents'][0].metadata['source']}"
+                    response = f"{result['result']}\n📚 来源：{result['source_documents'][0].metadata['source']}"
                 else:
                     # 没有文档上传，直接调用模型
                     response = model.invoke(query)
@@ -85,7 +85,7 @@ def process_command(command: str, qa_system: DocumentQASystem) -> bool:
         if export_file:
             print(f"\n已导出结果至：{os.path.abspath(export_file)}")
         else:
-            print("\n导出结果失败")
+            print("❌ \n导出结果失败")
         return True
 
     elif command == "/help":
@@ -93,18 +93,18 @@ def process_command(command: str, qa_system: DocumentQASystem) -> bool:
         return True
 
     elif command == "/upload":
-        file_path = input("请输入文件路径：").strip()
+        file_path = input("📂 请输入文件路径：").strip()
         if not os.path.exists(file_path):
-            print("文件不存在")
+            print("❌ 文件不存在")
             return False
         if load_document(qa_system, file_path):
-            print("文档加载成功")
+            print("📄  文档加载成功")
             return True
-        print("文档加载失败")
+        print("❌ 文档加载失败")
         return False
 
     else:
-        print("未知命令，输入/help查看帮助")
+        print("❌ 未知命令，输入/help查看帮助")
         return False
 
 def process_query(query: str, qa_system: DocumentQASystem, current_model: str) -> None:
@@ -125,7 +125,7 @@ def process_query(query: str, qa_system: DocumentQASystem, current_model: str) -
         print(f"\n{current_model.upper()}:", response)
 
     except Exception as e:
-        error_msg = f"处理错误：{str(e)}"
+        error_msg = f"❌ 处理错误：{str(e)}"
         logging.error(error_msg)
         print(error_msg)
 
@@ -146,7 +146,7 @@ def main():
 
                 # 退出指令处理
                 if line.lower() in ["exit", "quit"]:
-                    print("再见！")
+                    print("👋  再见！")
                     return
 
                 # 命令立即执行
@@ -159,7 +159,7 @@ def main():
                 if not line:
                     if user_input:
                         full_query = "\n".join(user_input)
-                        print("Model思考中......")
+                        print("🤖 Model思考中......")
                         process_query(full_query, qa_system, current_model)
                     user_input = []
                     break
@@ -170,7 +170,7 @@ def main():
             print("\n输入中断，输入 exit 退出程序")
         except Exception as e:
             logging.error(f"系统错误：{str(e)}")
-            print("发生意外错误，请重新尝试")
+            print("❌ 发生意外错误，请重新尝试")
 
 if __name__ == "__main__":
     main()

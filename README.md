@@ -23,7 +23,7 @@ How to use?
 
 3. download the correct software package.
 
-   
+   Please create the env on conda since it seems that faiss-gpu packet only can be install by 'conda install' command.
 
    ```bash
    pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu121   
