@@ -1,13 +1,12 @@
 # main.py
 import os
 import time
-import torch
+import Core
 import logging
-
 from langchain.chains import RetrievalQA
-
 from Core.models import DocumentQASystem
 from Core.document_loader import load_document
+from Core.auto_test import perform_auto_test, visualize_results
 from Utils.utils import print_help, export_to_excel
 
 def process_command(command: str, qa_system: DocumentQASystem) -> bool:
@@ -86,6 +85,27 @@ def process_command(command: str, qa_system: DocumentQASystem) -> bool:
             print(f"\n已导出结果至：{os.path.abspath(export_file)}")
         else:
             print("❌ \n导出结果失败")
+        return True
+
+    # /autotest - 自动测试命令
+    elif command.startswith("/autotest"):
+        # 询问测试数量
+        logic_count = int(input("请输入测试的逻辑题数量："))
+        read_count = int(input("请输入测试的阅读理解题数量："))
+        math_count = int(input("请输入测试的数学题数量："))
+
+        # 调用相关函数加载问题并进行测试
+        print(f"开始自动测试 {logic_count} 道逻辑题，{read_count} 道阅读理解题，{math_count} 道数学题...")
+        results, standard_answers = perform_auto_test(qa_system, logic_count, read_count, math_count)
+
+        # 导出并可视化结果
+        export_file = Core.auto_test.export_to_excel(results, "Sample Query", standard_answers)
+        if export_file:
+            print(f"\n测试结果已导出至：{os.path.abspath(export_file)}")
+            visualize_results(export_file)  # 生成可视化图表
+        else:
+            print("❌ 导出结果失败")
+
         return True
 
     elif command == "/help":

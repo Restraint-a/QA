@@ -1,8 +1,9 @@
 # utils.py
+import os
+import logging
 import pandas as pd
 from datetime import datetime
-import logging
-import os
+
 
 DEFAULT_PATH = "./compare_output"
 def print_help():
@@ -12,7 +13,8 @@ def print_help():
     /compare [问题]         - 对比模型性能
     /help                  - 显示帮助信息
     /upload                - 上传文档进入问答模式
-    exit/quit              - 退出系统
+    /autotest              - 自动测试
+    /exit/quit              - 退出系统
 """)
 
 def export_to_excel(results, query):

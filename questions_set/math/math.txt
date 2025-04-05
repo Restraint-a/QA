@@ -1,0 +1,47 @@
+1. The Education Bureau sends a batch of books to schools, and if each school sends 8 boxes of books on Chinese and 6 boxes of books on mathematics, there will be 3 times as many mathematics books left over as there are books on Chinese. If each school sends 9 boxes of Chinese books and 8 boxes of mathematics books, then the shortage of Chinese books is three times that of mathematics books.
+A.128
+B.132
+C.256
+D.264
+
+2. A certain unit organized a networking activity, 50% of the sales department participated, 60% of the network department participated, and the number of the network department participated was 6 more than that of the sales department. Later, due to urgent work, 60% of the remaining employees in the sales department and 50% of the network department were selected to form a working group of 30 people. How many employees does the unit have?
+A.60
+B.75
+C.90
+D.120
+
+3. An open-air pool filled with water, separately open a drain, 5 hours can discharge a quarter of the total water; Open the B drain separately, and one third of the total water can be discharged in four hours. If the pool only opens the B drain on a rainy day, it takes 20 hours to empty the pool, assuming that the rain water speed is constant, ask how long it takes to drain the water with both A and B drains at the same time in rainy weather.
+A.8 hours
+B. Nine hours
+C.10 hours
+D.11 hours
+
+4.(Single choice) A store sells a batch of goods and expects to sell them at 50% profit. After 70% is sold, the store holds sales activities and increases the price by 20 yuan on the basis of the original price and then sells them at a discount of 20%.
+A.100
+B.120
+C.135
+D.150
+
+5. Xiao Li needs to take a section of expressway and a section of national highway to drive from City A to City B. It is known that the fuel consumption of the car on the highway is 0.05 l/km, and the fuel consumption on the national road is 0.03 L/km more than that on the highway. Xiao Li drove 200 kilometers on the highway, 4 times the distance on the national highway, then from A city to B city, Xiao Li's car fuel consumption of how many liters?
+A. 15
+B. 14
+C. 12
+D. 10
+
+6. Xiao Chen plans to complete all the exercises in the legal knowledge question bank within a certain period of time. If you do 50 questions a day, then the last two days to do 85 questions a day to complete, if you do 55 questions a day, just one day in advance of the completion, then the question bank has a total of () questions.
+A. 1215
+B. 1250
+C. 1320
+D. 1375
+
+7. A company plans to select members of a special working group from all 80 employees, requiring that the members of the group must have both grassroots experience and computer level certificates. It is known that 40 people in the unit have grassroots experience, 46 people have computer level certificates, and 10 people have neither grassroots experience nor computer level certificates. Then there are () employees who can enter the working group.
+A.16
+B.40
+C.46
+D.54
+
+8. A, B, C 3 units subscribe to the same newspaper, the known 3 units subscribe to a total of 12 copies, of which each unit subscription number is not less than 3 copies, but not more than 5 copies, then the number of newspaper subscriptions of these 3 units may be how many combinations?
+A.2
+B.6
+C.7
+D.9
