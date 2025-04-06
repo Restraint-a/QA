@@ -7,10 +7,17 @@ from langchain.chains import RetrievalQA
 from Core.models import DocumentQASystem
 from Core.document_loader import load_document
 from Core.auto_test import perform_auto_test, visualize_results
-from Utils.utils import print_help, export_to_excel
+from Utils.utils import print_help, export_to_excel, generate_improved_prompt, save_feedback_data
+
+# 全局变量，用于存储最近的查询和响应
+last_query = None
+last_response = None
+last_model = None
 
 def process_command(command: str, qa_system: DocumentQASystem) -> bool:
     """处理系统命令"""
+    global last_query, last_response, last_model
+    
     command = command.strip().lower()
 
     if command.startswith("/switch"):
@@ -24,6 +31,58 @@ def process_command(command: str, qa_system: DocumentQASystem) -> bool:
         else:
             print(f"❌ 无效模型，可用选项：{list(qa_system.llm_registry.keys())}")
             return False
+
+    # 处理用户反馈 - 赞同
+    elif command == "/like":
+        if not last_query or not last_response:
+            print("❌ 没有找到可以评价的上一次对话")
+            return False
+        
+        print("✅ 感谢您的反馈！我们会继续保持这样的回答质量。")
+        save_feedback_data(last_query, last_response, last_model, "like")
+        return True
+    
+    # 处理用户反馈 - 不赞同
+    elif command.startswith("/dislike"):
+        if not last_query or not last_response:
+            print("❌ 没有找到可以评价的上一次对话")
+            return False
+        
+        # 提取反馈原因
+        reason = command[8:].strip() if len(command) > 8 else None
+        if not reason:
+            reason = input("请简单描述您不满意的原因: ")
+        
+        print("🔄 正在根据您的反馈生成改进的回答...")
+        
+        # 生成改进的提示词
+        improved_prompt = generate_improved_prompt(last_query, last_response, "dislike", reason)
+        
+        # 使用改进的提示词重新生成回答
+        try:
+            model = qa_system.llm_registry[qa_system.current_model]
+            
+            # 组合原始查询和改进提示词
+            combined_prompt = f"{improved_prompt}\n\n原始问题: {last_query}"
+            
+            # 重新生成回答
+            improved_response = model.invoke(combined_prompt)
+            
+            print(f"\n{qa_system.current_model.upper()} (改进后):", improved_response)
+            
+            # 保存反馈和改进的回答
+            save_feedback_data(last_query, last_response, last_model, "dislike", 
+                              improved_response, reason)
+            
+            # 更新最近的响应
+            last_response = improved_response
+            
+        except Exception as e:
+            error_msg = f"❌ 生成改进回答时出错：{str(e)}"
+            logging.error(error_msg)
+            print(error_msg)
+        
+        return True
 
     # main.py 中的 process_command 函数部分
     elif command.startswith("/compare"):
@@ -129,6 +188,8 @@ def process_command(command: str, qa_system: DocumentQASystem) -> bool:
 
 def process_query(query: str, qa_system: DocumentQASystem, current_model: str) -> None:
     """处理用户查询"""
+    global last_query, last_response, last_model
+    
     try:
         if qa_system.qa_chain:
             result = qa_system.qa_chain({"query": query})
@@ -143,6 +204,14 @@ def process_query(query: str, qa_system: DocumentQASystem, current_model: str) -
             response = qa_system.conversation_chain.predict(input=query)
 
         print(f"\n{current_model.upper()}:", response)
+        
+        # 保存最近的查询和响应，以便反馈
+        last_query = query
+        last_response = response
+        last_model = current_model
+        
+        # 提示用户可以提供反馈
+        print("\n💬 您可以使用 /like 表示赞同，或 /dislike [原因] 表示不赞同")
 
     except Exception as e:
         error_msg = f"❌ 处理错误：{str(e)}"
@@ -153,6 +222,9 @@ def main():
     qa_system = DocumentQASystem()
     print_help()
     current_model = qa_system.current_model
+    
+    # 确保反馈目录存在
+    os.makedirs("./feedback_data", exist_ok=True)
 
     while True:
         try:
@@ -165,7 +237,7 @@ def main():
                 line = input().strip()
 
                 # 退出指令处理
-                if line.lower() in ["exit", "quit"]:
+                if line.lower() in ["exit", "quit","/exit","/quit"]:
                     print("👋  再见！")
                     return
 
