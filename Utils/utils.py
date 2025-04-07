@@ -44,7 +44,6 @@ def export_to_excel(results, query):
             # 添加GPU显存信息 - 只保留显存使用峰值和变化
             if "gpu_memory_diff" in result and result["gpu_memory_diff"]:
                 for device_id, gpu_stats in result["gpu_memory_diff"].items():
-                    device_name = gpu_stats["device_name"].replace(" ", "_")
                     # 只保留显存使用变化和峰值
                     row[f"Memory_Diff_MB"] = gpu_stats["memory_diff_mb"]
                     if "peak_memory_mb" in gpu_stats:

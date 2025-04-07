@@ -173,23 +173,6 @@ def process_command(command: str, qa_system: DocumentQASystem) -> bool:
                             "memory_diff_mb": memory_diff,
                             "peak_memory_mb": peak_memory
                         }
-                # 删除以下与显存利用率相关的代码
-                # util_before = round(before_stats["utilization_percent"], 2)
-                # util_after = round(after_stats["utilization_percent"], 2)
-                
-                # 计算一致性指标 - 显存使用与利用率变化是否一致
-                # memory_change_direction = 1 if memory_diff > 0 else (-1 if memory_diff < 0 else 0)
-                # util_change_direction = 1 if (util_after - util_before) > 0 else (-1 if (util_after - util_before) < 0 else 0)
-                # consistency = "一致" if memory_change_direction == util_change_direction else "不一致"
-                
-                # gpu_memory_diff[device_id] = {
-                #     "device_name": before_stats["device_name"],
-                #     "memory_diff_mb": memory_diff,
-                #     "utilization_before": util_before,
-                #     "utilization_after": util_after,
-                #     "utilization_diff": round(util_after - util_before, 2),
-                #     "consistency": consistency
-                # }
                 
                 latency = end_time - start_time
                 
