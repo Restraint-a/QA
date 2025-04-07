@@ -225,57 +225,69 @@ def export_to_excel(results: list, standard_map: dict) -> str:
 def visualize_results(excel_path: str):
     """生成可视化报表"""
     df = pd.read_excel(excel_path)
-
-    # 创建画布
-    plt.figure(figsize=(18, 14), dpi=100)
-    plt.rcParams['font.size'] = 12
+    # 设置中文字体支持
+    plt.rcParams['font.sans-serif'] = ['SimHei', 'Microsoft YaHei', 'SimSun', 'Arial Unicode MS']  # 优先使用的中文字体列表
+    plt.rcParams['axes.unicode_minus'] = False  # 解决负号显示问题
+    # 创建画布和子图
+    fig, axes = plt.subplots(2, 2, figsize=(20, 15))
+    plt.subplots_adjust(hspace=0.4, wspace=0.3)
+    fig.suptitle("多模型性能综合对比", fontsize=16, y=0.95)
 
     # ================== 准确率对比 ==================
-    plt.subplot(2, 2, 1)
+    ax1 = axes[0, 0]
     accuracy_data = df[df['type'].isin(['logic', 'math'])] \
                         .groupby(['model', 'type'])['accuracy'].mean() * 100
-    accuracy_data.unstack().plot.bar()
-    plt.title('准确率对比（按题型）', pad=20)
-    plt.ylabel('准确率 (%)')
-    plt.ylim(0, 110)
-    plt.xticks(rotation=45, ha='right')
-
-    # 添加数值标签
-    for container in plt.gca().containers:
-        plt.bar_label(container, fmt='%.1f%%', label_type='edge', padding=3)
+    if not accuracy_data.empty:
+        accuracy_data.unstack().plot.bar(ax=ax1)
+        ax1.set_title('准确率对比（按题型）', pad=15)
+        ax1.set_ylabel('准确率 (%)')
+        ax1.set_ylim(0, 110)
+        ax1.tick_params(axis='x', rotation=45)
+        # 添加数值标签
+        for container in ax1.containers:
+            ax1.bar_label(container, fmt='%.1f%%', padding=3)
+    else:
+        ax1.text(0.5, 0.5, '无准确率数据', ha='center', va='center')
 
     # ================== 相关性对比 ==================
-    plt.subplot(2, 2, 2)
+    ax2 = axes[0, 1]
     relevance_data = df[df['type'].isin(['logic', 'read'])] \
                          .groupby(['model', 'type'])['relevance'].mean() * 100
-    relevance_data.unstack().plot.bar(color=['#1f77b4', '#ff7f0e'])
-    plt.title('相关性对比（按题型）', pad=20)
-    plt.ylabel('相关性 (%)')
-    plt.ylim(0, 110)
-    plt.xticks(rotation=45, ha='right')
+    if not relevance_data.empty:
+        relevance_data.unstack().plot.bar(ax=ax2, color=['#1f77b4', '#ff7f0e'])
+        ax2.set_title('相关性对比（按题型）', pad=15)
+        ax2.set_ylabel('相关性 (%)')
+        ax2.set_ylim(0, 110)
+        ax2.tick_params(axis='x', rotation=45)
+    else:
+        ax2.text(0.5, 0.5, '无相关性数据', ha='center', va='center')
 
     # ================== 完成度对比 ==================
-    plt.subplot(2, 2, 3)
+    ax3 = axes[1, 0]
     completion_data = df[df['type'] == 'logic'] \
                           .groupby('model')['completed_rate'].mean() * 100
-    completion_data.plot.bar(color='#2ca02c')
-    plt.title('逻辑题完成度对比', pad=20)
-    plt.ylabel('完成度 (%)')
-    plt.ylim(0, 110)
-    plt.xticks(rotation=45, ha='right')
+    if not completion_data.empty:
+        completion_data.plot.bar(ax=ax3, color='#2ca02c')
+        ax3.set_title('逻辑题完成度对比', pad=15)
+        ax3.set_ylabel('完成度 (%)')
+        ax3.set_ylim(0, 110)
+        ax3.tick_params(axis='x', rotation=45)
+    else:
+        ax3.text(0.5, 0.5, '无完成度数据', ha='center', va='center')
 
     # ================== 延迟对比 ==================
-    plt.subplot(2, 2, 4)
+    ax4 = axes[1, 1]
     latency_data = df.groupby(['model', 'type'])['latency'].mean().unstack()
-    latency_data.plot.bar()
-    plt.title('平均延迟对比（按题型）', pad=20)
-    plt.ylabel('延迟 (秒)')
-    plt.xticks(rotation=45, ha='right')
-
-    # 调整布局
-    plt.tight_layout(pad=4, h_pad=3, w_pad=3)
+    if not latency_data.empty:
+        latency_data.plot.bar(ax=ax4)
+        ax4.set_title('平均延迟对比（按题型）', pad=15)
+        ax4.set_ylabel('延迟 (秒)')
+        ax4.tick_params(axis='x', rotation=45)
+    else:
+        ax4.text(0.5, 0.5, '无延迟数据', ha='center', va='center')
 
     # 保存图表
     plot_path = excel_path.replace(".xlsx", "_visual.png")
     plt.savefig(plot_path, bbox_inches='tight')
+    plt.close()
     print(f"可视化图表已保存至：{plot_path}")
