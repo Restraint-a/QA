@@ -30,6 +30,7 @@ def export_to_excel(results, query):
         # 组装数据
         data = []
         for model_name, result in results.items():
+            # 基本信息
             row = {
                 "Model": model_name.upper(),
                 "Query": safe_query,
@@ -38,22 +39,32 @@ def export_to_excel(results, query):
                 "Tokens/Second": result.get("tokens_per_second", "N/A"),
                 "Response Length": result.get("response_length", "N/A"),
                 "Memory Usage (MB)": result.get("memory_usage", "N/A"),
-                "Response Preview": result["response"][:200] + "..." if len(result["response"]) > 200 else result["response"]
             }
+            
+            # 添加GPU显存信息 - 只保留显存使用峰值和变化
+            if "gpu_memory_diff" in result and result["gpu_memory_diff"]:
+                for device_id, gpu_stats in result["gpu_memory_diff"].items():
+                    device_name = gpu_stats["device_name"].replace(" ", "_")
+                    # 只保留显存使用变化和峰值
+                    row[f"Memory_Diff_MB"] = gpu_stats["memory_diff_mb"]
+                    if "peak_memory_mb" in gpu_stats:
+                        row[f"Peak_Memory_MB"] = gpu_stats["peak_memory_mb"]
+                
+            
+            # 添加响应内容
+            row["Response"] = result["response"]
             data.append(row)
-
-        # 构造 DataFrame
+            
+        # 创建DataFrame并导出
         df = pd.DataFrame(data)
-        df = df[["Model", "Query", "Latency", "Tokens", "Tokens/Second", 
-                "Response Length", "Memory Usage (MB)", "Response Preview"]]
-
+        
         # 确保输出目录存在
         os.makedirs(DEFAULT_PATH, exist_ok=True)
-        filename = os.path.join(DEFAULT_PATH, filename)
-
-        # 导出 Excel 文件
-        df.to_excel(filename, index=False, engine="openpyxl")
-        return filename
+        output_path = os.path.join(DEFAULT_PATH, filename)
+        
+        # 导出到Excel
+        df.to_excel(output_path, index=False)
+        return output_path
     except Exception as e:
         logging.error(f"导出失败: {str(e)}")
         return None

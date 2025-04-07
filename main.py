@@ -4,6 +4,7 @@ import time
 import psutil
 import Core
 import logging
+import torch
 from langchain.chains import RetrievalQA
 from Core.models import DocumentQASystem
 from Core.document_loader import load_document
@@ -85,7 +86,7 @@ def process_command(command: str, qa_system: DocumentQASystem) -> bool:
         
         return True
 
-    # main.py 中的 process_command 函数部分
+    # main.py 中的 /compare 命令处理部分
     elif command.startswith("/compare"):
         query_part = command[8:].strip()
         if not query_part:
@@ -108,9 +109,21 @@ def process_command(command: str, qa_system: DocumentQASystem) -> bool:
         results = {}
         for name, model in qa_system.llm_registry.items():
             try:
-                # 记录开始时的内存使用
+                # 强制执行垃圾回收
+                import gc
+                gc.collect()
+                if torch.cuda.is_available():
+                    torch.cuda.empty_cache()
+                
+                # 等待系统稳定
+                time.sleep(2)
+                
+                # 记录开始时的内存和显存使用
                 process = psutil.Process(os.getpid())
                 memory_before = process.memory_info().rss / 1024 / 1024  # 转换为MB
+                
+                # 记录开始时的GPU显存使用
+                gpu_memory_before = qa_system.get_gpu_memory_usage()
                 
                 start_time = time.time()
                 if qa_system.qa_chain:  # 检查是否有文档上传
@@ -132,6 +145,52 @@ def process_command(command: str, qa_system: DocumentQASystem) -> bool:
                 memory_after = process.memory_info().rss / 1024 / 1024  # 转换为MB
                 memory_usage = memory_after - memory_before
                 
+                # 等待系统稳定后再测量显存
+                time.sleep(2)
+                
+                # 强制执行垃圾回收
+                gc.collect()
+                if torch.cuda.is_available():
+                    torch.cuda.empty_cache()
+                    
+                # 记录结束时的GPU显存使用
+                gpu_memory_after = qa_system.get_gpu_memory_usage()
+                
+                # 计算GPU显存变化
+                gpu_memory_diff = {}
+                if gpu_memory_before["available"] and gpu_memory_after["available"]:
+                    for device_id, before_stats in gpu_memory_before["devices"].items():
+                        after_stats = gpu_memory_after["devices"][device_id]
+                        
+                        # 只计算显存使用变化，不再计算利用率
+                        memory_diff = round(after_stats["used_memory_mb"] - before_stats["used_memory_mb"], 2)
+                        
+                        # 获取峰值显存使用
+                        peak_memory = after_stats.get("peak_memory_mb", after_stats["used_memory_mb"])
+                        
+                        gpu_memory_diff[device_id] = {
+                            "device_name": before_stats["device_name"],
+                            "memory_diff_mb": memory_diff,
+                            "peak_memory_mb": peak_memory
+                        }
+                # 删除以下与显存利用率相关的代码
+                # util_before = round(before_stats["utilization_percent"], 2)
+                # util_after = round(after_stats["utilization_percent"], 2)
+                
+                # 计算一致性指标 - 显存使用与利用率变化是否一致
+                # memory_change_direction = 1 if memory_diff > 0 else (-1 if memory_diff < 0 else 0)
+                # util_change_direction = 1 if (util_after - util_before) > 0 else (-1 if (util_after - util_before) < 0 else 0)
+                # consistency = "一致" if memory_change_direction == util_change_direction else "不一致"
+                
+                # gpu_memory_diff[device_id] = {
+                #     "device_name": before_stats["device_name"],
+                #     "memory_diff_mb": memory_diff,
+                #     "utilization_before": util_before,
+                #     "utilization_after": util_after,
+                #     "utilization_diff": round(util_after - util_before, 2),
+                #     "consistency": consistency
+                # }
+                
                 latency = end_time - start_time
                 
                 # 估算令牌数量 (简单估计，每个单词约1.3个令牌)
@@ -147,7 +206,8 @@ def process_command(command: str, qa_system: DocumentQASystem) -> bool:
                     "tokens": estimated_tokens,
                     "tokens_per_second": f"{tokens_per_second:.2f}",
                     "response_length": len(response),
-                    "memory_usage": f"{memory_usage:.2f}"
+                    "memory_usage": f"{memory_usage:.2f}",
+                    "gpu_memory_diff": gpu_memory_diff
                 }
                 
                 # 释放资源
@@ -164,6 +224,18 @@ def process_command(command: str, qa_system: DocumentQASystem) -> bool:
             print(f"令牌生成速度：{data['tokens_per_second']} tokens/s")
             print(f"响应长度：{data['response_length']} 字符")
             print(f"内存使用：{data['memory_usage']} MB")
+            
+            # 显示GPU显存使用情况
+            if "gpu_memory_diff" in data and data["gpu_memory_diff"]:
+                print("GPU显存使用情况:")
+                for device_id, gpu_stats in data["gpu_memory_diff"].items():
+                    print(f"  {gpu_stats['device_name']}:")
+                    print(f"    显存使用变化: {gpu_stats['memory_diff_mb']} MB")
+                    if "peak_memory_mb" in gpu_stats:
+                        print(f"    显存使用峰值: {gpu_stats['peak_memory_mb']} MB")
+            else:
+                print("GPU显存信息: 不可用")
+            
             print(f"响应预览：{data['response'][:100]}...\n")
 
         export_file = export_to_excel(results, query)

@@ -226,6 +226,11 @@ def visualize_results(excel_path: str):
     """生成可视化报表"""
     df = pd.read_excel(excel_path)
 
+
+    # 设置中文字体支持
+    plt.rcParams['font.sans-serif'] = ['SimHei', 'Microsoft YaHei', 'SimSun', 'Arial Unicode MS']  # 优先使用的中文字体列表
+    plt.rcParams['axes.unicode_minus'] = False  # 解决负号显示问题
+
     # 创建画布
     plt.figure(figsize=(18, 14), dpi=100)
     plt.rcParams['font.size'] = 12
