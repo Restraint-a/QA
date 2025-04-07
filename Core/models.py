@@ -1,7 +1,8 @@
 # models.py
-import os
-import time
+
 import torch
+import subprocess
+import time
 from langchain.memory import ConversationBufferMemory
 from langchain.chains import ConversationChain
 from langchain.chains import RetrievalQA
@@ -26,13 +27,13 @@ class DocumentQASystem:
             ),
             "qwen": Ollama(
                 model="qwen2.5:7b",
-                temperature=0.5,
-                num_ctx=2048,
+                temperature=0.7,
+                num_ctx=4096,
             ),
             "deepseek": Ollama(
                 model="deepseek-r1:7b",
-                temperature=0.5,
-                num_ctx=2048,
+                temperature=0.7,
+                num_ctx=4096,
             ),
         }
 
@@ -47,8 +48,6 @@ class DocumentQASystem:
     def get_gpu_memory_usage(self):
         """获取当前GPU显存使用情况"""
         try:
-            import subprocess
-            import time
             
             # 多次采样以获取更稳定的结果和峰值
             samples = []
