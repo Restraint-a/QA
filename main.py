@@ -1,6 +1,7 @@
 # main.py
 import os
 import time
+import psutil
 import Core
 import logging
 from langchain.chains import RetrievalQA
@@ -107,9 +108,6 @@ def process_command(command: str, qa_system: DocumentQASystem) -> bool:
         results = {}
         for name, model in qa_system.llm_registry.items():
             try:
-                import psutil
-                import os
-                
                 # 记录开始时的内存使用
                 process = psutil.Process(os.getpid())
                 memory_before = process.memory_info().rss / 1024 / 1024  # 转换为MB
