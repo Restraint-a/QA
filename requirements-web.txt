@@ -1,0 +1,6 @@
+# Web UI dependencies with specific versions
+Flask==2.0.1
+Werkzeug==2.0.1
+WTForms==3.0.0
+Flask-WTF==1.0.0
+Flask-Session==0.4.0

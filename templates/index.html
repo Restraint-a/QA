@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>智能问答系统</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="container-fluid">
+        <div class="row">
+            <!-- 侧边栏 -->
+            <div class="col-md-3 col-lg-2 d-md-block bg-light sidebar collapse">
+                <div class="position-sticky pt-3">
+                    <h5 class="sidebar-heading d-flex justify-content-between align-items-center px-3 mt-4 mb-1 text-muted">
+                        <span>模型选择</span>
+                    </h5>
+                    <div class="px-3 py-2">
+                        <select id="model-selector" class="form-select">
+                            {% for model in models %}
+                            <option value="{{ model }}">{{ model|upper }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <h5 class="sidebar-heading d-flex justify-content-between align-items-center px-3 mt-4 mb-1 text-muted">
+                        <span>功能菜单</span>
+                    </h5>
+                    <ul class="nav flex-column">
+                        <li class="nav-item">
+                            <a class="nav-link active" href="#" id="chat-tab">
+                                <i class="bi bi-chat-dots"></i> 对话模式
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#" id="upload-tab">
+                                <i class="bi bi-file-earmark-text"></i> 文档问答
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#" id="compare-tab">
+                                <i class="bi bi-bar-chart"></i> 模型比较
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#" id="autotest-tab">
+                                <i class="bi bi-speedometer"></i> 自动测试
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- 主内容区 -->
+            <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
+                <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                    <h1 class="h2">智能问答系统</h1>
+                </div>
+
+                <!-- 对话模式 -->
+                <div id="chat-section" class="content-section">
+                    <div id="chat-container" class="mb-3">
+                        <div id="chat-messages" class="chat-messages"></div>
+                    </div>
+                    <div class="input-group mb-3">
+                        <textarea id="query-input" class="form-control" placeholder="输入您的问题..." rows="3"></textarea>
+                        <button id="send-btn" class="btn btn-primary">
+                            <i class="bi bi-send"></i> 发送
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 文档问答 -->
+                <div id="upload-section" class="content-section" style="display: none;">
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <i class="bi bi-file-earmark-text"></i> 上传文档
+                        </div>
+                        <div class="card-body">
+                            <form id="upload-form" enctype="multipart/form-data">
+                                <div class="mb-3">
+                                    <label for="document-file" class="form-label">选择文件 (支持 .txt, .pdf, .docx)</label>
+                                    <input class="form-control" type="file" id="document-file" accept=".txt,.pdf,.docx,.doc">
+                                </div>
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="bi bi-cloud-upload"></i> 上传并处理
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                    <div id="doc-chat-container" class="mb-3">
+                        <div id="doc-chat-messages" class="chat-messages"></div>
+                    </div>
+                    <div class="input-group mb-3">
+                        <textarea id="doc-query-input" class="form-control" placeholder="上传文档后，在这里提问..." rows="3"></textarea>
+                        <button id="doc-send-btn" class="btn btn-primary">
+                            <i class="bi bi-send"></i> 发送
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 模型比较 -->
+                <div id="compare-section" class="content-section" style="display: none;">
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <i class="bi bi-bar-chart"></i> 模型性能比较
+                        </div>
+                        <div class="card-body">
+                            <div class="mb-3">
+                                <label for="compare-query" class="form-label">输入查询内容</label>
+                                <textarea id="compare-query" class="form-control" rows="4" placeholder="输入要比较的查询内容..."></textarea>
+                            </div>
+                            <button id="compare-btn" class="btn btn-primary">
+                                <i class="bi bi-play"></i> 开始比较
+                            </button>
+                        </div>
+                    </div>
+                    <div id="compare-results" class="mt-4">
+                        <!-- 比较结果将在这里显示 -->
+                    </div>
+                </div>
+
+                <!-- 自动测试 -->
+                <div id="autotest-section" class="content-section" style="display: none;">
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <i class="bi bi-speedometer"></i> 自动测试
+                        </div>
+                        <div class="card-body">
+                            <form id="autotest-form">
+                                <div class="row g-3 mb-3">
+                                    <div class="col-md-4">
+                                        <label for="logic-count" class="form-label">逻辑题数量</label>
+                                        <input type="number" class="form-control" id="logic-count" min="0" max="4" value="1">
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label for="read-count" class="form-label">阅读理解题数量</label>
+                                        <input type="number" class="form-control" id="read-count" min="0" max="3" value="1">
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label for="math-count" class="form-label">数学题数量</label>
+                                        <input type="number" class="form-control" id="math-count" min="0" max="10" value="1">
+                                    </div>
+                                </div>
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="bi bi-play"></i> 开始测试
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                    <div id="test-results" class="mt-4">
+                        <!-- 测试结果将在这里显示 -->
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- 加载中提示 -->
+    <div id="loading-overlay" style="display: none;">
+        <div class="spinner-border text-light" role="status">
+            <span class="visually-hidden">加载中...</span>
+        </div>
+        <div class="mt-2 text-light">处理中，请稍候...</div>
+    </div>
+
+    <!-- 反馈模态框 -->
+    <div class="modal fade" id="feedback-modal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">提供反馈</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="feedback-reason" class="form-label">请描述您不满意的原因</label>
+                        <textarea class="form-control" id="feedback-reason" rows="3"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                    <button type="button" class="btn btn-primary" id="submit-dislike">提交</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+</html>
