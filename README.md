@@ -58,3 +58,20 @@ How to use?
    
 
 5. run main.py
+
+
+
+6. If wanna try web mode, 
+```bash
+pip install Flask==2.3.3 WTForms==3.1.1 Flask-WTF==1.2.1 Flask-Session==0.5.0
+```
+or
+```bash
+pip install -r requirements-web.txt
+```
+
+Then run:
+```python
+python app.py
+```
+and go to http://localhost:5000
