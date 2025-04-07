@@ -257,10 +257,12 @@ document.addEventListener('DOMContentLoaded', function() {
             
             if (response.ok) {
                 alert(result.message);
+                // 在清空文件选择前保存文件名
+                const fileName = documentFile.files[0].name;
                 // 清空文件选择
                 documentFile.value = '';
                 // 添加系统消息
-                addMessage(docChatMessages, `文档 "${documentFile.files[0].name}" 已成功加载，您现在可以提问关于文档的问题。`, false, '系统');
+                addMessage(docChatMessages, `文档 "${fileName}" 已成功加载，您现在可以提问关于文档的问题。`, false, '系统');
             } else {
                 alert(`文件上传失败: ${result.error}`);
             }
