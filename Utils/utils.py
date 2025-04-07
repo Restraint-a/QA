@@ -34,14 +34,21 @@ def export_to_excel(results, query):
                 "Model": model_name.upper(),
                 "Query": safe_query,
                 "Latency": result["latency"],
-                "Response Preview": result["response"]
+                "Tokens": result.get("tokens", "N/A"),
+                "Tokens/Second": result.get("tokens_per_second", "N/A"),
+                "Response Length": result.get("response_length", "N/A"),
+                "Memory Usage (MB)": result.get("memory_usage", "N/A"),
+                "Response Preview": result["response"][:200] + "..." if len(result["response"]) > 200 else result["response"]
             }
             data.append(row)
 
         # 构造 DataFrame
         df = pd.DataFrame(data)
-        df = df[["Model", "Query", "Latency", "Response Preview"]]
+        df = df[["Model", "Query", "Latency", "Tokens", "Tokens/Second", 
+                "Response Length", "Memory Usage (MB)", "Response Preview"]]
 
+        # 确保输出目录存在
+        os.makedirs(DEFAULT_PATH, exist_ok=True)
         filename = os.path.join(DEFAULT_PATH, filename)
 
         # 导出 Excel 文件

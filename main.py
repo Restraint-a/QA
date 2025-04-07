@@ -107,6 +107,13 @@ def process_command(command: str, qa_system: DocumentQASystem) -> bool:
         results = {}
         for name, model in qa_system.llm_registry.items():
             try:
+                import psutil
+                import os
+                
+                # 记录开始时的内存使用
+                process = psutil.Process(os.getpid())
+                memory_before = process.memory_info().rss / 1024 / 1024  # 转换为MB
+                
                 start_time = time.time()
                 if qa_system.qa_chain:  # 检查是否有文档上传
                     # 使用 qa_chain 生成基于文档的回答
@@ -122,11 +129,29 @@ def process_command(command: str, qa_system: DocumentQASystem) -> bool:
                     # 没有文档上传，直接调用模型
                     response = model.invoke(query)
                 end_time = time.time()
+                
+                # 记录结束时的内存使用
+                memory_after = process.memory_info().rss / 1024 / 1024  # 转换为MB
+                memory_usage = memory_after - memory_before
+                
                 latency = end_time - start_time
+                
+                # 估算令牌数量 (简单估计，每个单词约1.3个令牌)
+                response_words = len(response.split())
+                estimated_tokens = int(response_words * 1.3)
+                
+                # 计算令牌生成速度
+                tokens_per_second = estimated_tokens / latency if latency > 0 else 0
+                
                 results[name] = {
                     "response": response,
-                    "latency": f"{latency:.2f}s"
+                    "latency": f"{latency:.2f}s",
+                    "tokens": estimated_tokens,
+                    "tokens_per_second": f"{tokens_per_second:.2f}",
+                    "response_length": len(response),
+                    "memory_usage": f"{memory_usage:.2f}"
                 }
+                
                 # 释放资源
                 del response
                 qa_system._release_model_resources()
@@ -137,7 +162,11 @@ def process_command(command: str, qa_system: DocumentQASystem) -> bool:
         for model_name, data in results.items():
             print(f"{model_name.upper()}:")
             print(f"延迟：{data['latency']}")
-            print(f"响应预览：{data['response'][:200]}...\n")
+            print(f"估计令牌数：{data['tokens']}")
+            print(f"令牌生成速度：{data['tokens_per_second']} tokens/s")
+            print(f"响应长度：{data['response_length']} 字符")
+            print(f"内存使用：{data['memory_usage']} MB")
+            print(f"响应预览：{data['response'][:100]}...\n")
 
         export_file = export_to_excel(results, query)
         if export_file:
