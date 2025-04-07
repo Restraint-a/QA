@@ -1,47 +1,89 @@
-1. The Education Bureau sends a batch of books to schools, and if each school sends 8 boxes of books on Chinese and 6 boxes of books on mathematics, there will be 3 times as many mathematics books left over as there are books on Chinese. If each school sends 9 boxes of Chinese books and 8 boxes of mathematics books, then the shortage of Chinese books is three times that of mathematics books.
+1. The price of a desk is 355 yuan, the price of a chair is 249 yuan, if you buy both, how much does it cost?
+A.600
+B.650
+C.550
+D.620
+
+2. The Education Bureau sends a batch of books to schools, and if each school sends 8 boxes of books on Chinese and 6 boxes of books on mathematics, there will be 3 times as many mathematics books left over as there are books on Chinese. If each school sends 9 boxes of Chinese books and 8 boxes of mathematics books, then the shortage of Chinese books is three times that of mathematics books.
 A.128
 B.132
 C.256
 D.264
 
-2. A certain unit organized a networking activity, 50% of the sales department participated, 60% of the network department participated, and the number of the network department participated was 6 more than that of the sales department. Later, due to urgent work, 60% of the remaining employees in the sales department and 50% of the network department were selected to form a working group of 30 people. How many employees does the unit have?
+3. A cone has a volume of 48 cubic centimeters and a base area of 16 square centimeters. What is its height?
+A.9
+B.3
+C.6
+D.1
+
+4. A certain unit organized a networking activity, 50% of the sales department participated, 60% of the network department participated, and the number of the network department participated was 6 more than that of the sales department. Later, due to urgent work, 60% of the remaining employees in the sales department and 50% of the network department were selected to form a working group of 30 people. How many employees does the unit have?
 A.60
 B.75
 C.90
 D.120
 
-3. An open-air pool filled with water, separately open a drain, 5 hours can discharge a quarter of the total water; Open the B drain separately, and one third of the total water can be discharged in four hours. If the pool only opens the B drain on a rainy day, it takes 20 hours to empty the pool, assuming that the rain water speed is constant, ask how long it takes to drain the water with both A and B drains at the same time in rainy weather.
+5. If the height of the two cylinders is equal, the ratio of the base radii is 3:2, what is the volume ratio?
+A.3:2
+B.9:4
+C.27:8
+D.6:5
+
+6. An open-air pool filled with water, separately open a drain, 5 hours can discharge a quarter of the total water; Open the B drain separately, and one third of the total water can be discharged in four hours. If the pool only opens the B drain on a rainy day, it takes 20 hours to empty the pool, assuming that the rain water speed is constant, ask how long it takes to drain the water with both A and B drains at the same time in rainy weather.
 A.8 hours
 B. Nine hours
 C.10 hours
 D.11 hours
 
-4.(Single choice) A store sells a batch of goods and expects to sell them at 50% profit. After 70% is sold, the store holds sales activities and increases the price by 20 yuan on the basis of the original price and then sells them at a discount of 20%.
+7. An item sold at a 20% discount is 240 yuan cheaper than the original price. What is the price before the discount?
+A.240
+B.480
+C.960
+D.1200
+
+8. A store sells a batch of goods and expects to sell them at 50% profit. After 70% is sold, the store holds sales activities and increases the price by 20 yuan on the basis of the original price and then sells them at a discount of 20%.
 A.100
 B.120
 C.135
 D.150
 
-5. Xiao Li needs to take a section of expressway and a section of national highway to drive from City A to City B. It is known that the fuel consumption of the car on the highway is 0.05 l/km, and the fuel consumption on the national road is 0.03 L/km more than that on the highway. Xiao Li drove 200 kilometers on the highway, 4 times the distance on the national highway, then from A city to B city, Xiao Li's car fuel consumption of how many liters?
+9. If a suit is sold at a 20% discount, what is the current price compared to the original price?
+A.1:5
+B.8:5
+C.4:5
+D.2:5
+
+10. Xiao Li needs to take a section of expressway and a section of national highway to drive from City A to City B. It is known that the fuel consumption of the car on the highway is 0.05 l/km, and the fuel consumption on the national road is 0.03 L/km more than that on the highway. Xiao Li drove 200 kilometers on the highway, 4 times the distance on the national highway, then from A city to B city, Xiao Li's car fuel consumption of how many liters?
 A. 15
 B. 14
 C. 12
 D. 10
 
-6. Xiao Chen plans to complete all the exercises in the legal knowledge question bank within a certain period of time. If you do 50 questions a day, then the last two days to do 85 questions a day to complete, if you do 55 questions a day, just one day in advance of the completion, then the question bank has a total of () questions.
+11. Xiao Chen plans to complete all the exercises in the legal knowledge question bank within a certain period of time. If you do 50 questions a day, then the last two days to do 85 questions a day to complete, if you do 55 questions a day, just one day in advance of the completion, then the question bank has a total of () questions.
 A. 1215
 B. 1250
 C. 1320
 D. 1375
 
-7. A company plans to select members of a special working group from all 80 employees, requiring that the members of the group must have both grassroots experience and computer level certificates. It is known that 40 people in the unit have grassroots experience, 46 people have computer level certificates, and 10 people have neither grassroots experience nor computer level certificates. Then there are () employees who can enter the working group.
+12. A company plans to select members of a special working group from all 80 employees, requiring that the members of the group must have both grassroots experience and computer level certificates. It is known that 40 people in the unit have grassroots experience, 46 people have computer level certificates, and 10 people have neither grassroots experience nor computer level certificates. Then there are () employees who can enter the working group.
 A.16
 B.40
 C.46
 D.54
 
-8. A, B, C 3 units subscribe to the same newspaper, the known 3 units subscribe to a total of 12 copies, of which each unit subscription number is not less than 3 copies, but not more than 5 copies, then the number of newspaper subscriptions of these 3 units may be how many combinations?
+13. A, B, C 3 units subscribe to the same newspaper, the known 3 units subscribe to a total of 12 copies, of which each unit subscription number is not less than 3 copies, but not more than 5 copies, then the number of newspaper subscriptions of these 3 units may be how many combinations?
 A.2
 B.6
 C.7
 D.9
+
+14. A circle has a radius of 6 cm. What is its circumference in cm?
+A.18.84
+B.37.68
+C.113.04
+D.3.14
+
+15. If you draw the largest circle in a square with sides of 40cm, what is the radius of the circle in cm?
+A.40
+B.30
+C.20
+D.10
