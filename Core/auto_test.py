@@ -89,8 +89,9 @@ def evaluate_response(model_answer: str, item: dict, q_type: str) -> dict:
     }
 
     # 提取模型答案选项
-    option_match = re.search(r"【Answer】\s*([A-D])", model_answer, re.IGNORECASE)
+    option_match = re.search(r"\b([A-D])\b", model_answer)
     model_option = option_match.group(1).upper() if option_match else ""
+    print("model_option" + model_option)
 
     # 准确率评估（仅逻辑和数学题）
     if q_type in ["logic", "math"]:
