@@ -185,7 +185,7 @@ def process_command(command: str, qa_system: DocumentQASystem) -> bool:
         results, standard_answers = perform_auto_test(qa_system, logic_count, read_count, math_count)
 
         # 导出并可视化结果
-        export_file = Core.auto_test.export_to_excel(results, "Auto_Test", standard_answers)
+        export_file = Core.auto_test.export_to_excel(results, standard_answers)
         if export_file:
             print(f"\n测试结果已导出至：{os.path.abspath(export_file)}")
             visualize_results(export_file)  # 生成可视化图表

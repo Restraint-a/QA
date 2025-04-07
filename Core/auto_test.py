@@ -3,10 +3,9 @@ import re
 import time
 import logging
 import pandas as pd
-from datetime import datetime
+import matplotlib.pyplot as plt
 from typing import Dict, List, Tuple
 from Core.models import DocumentQASystem
-import matplotlib.pyplot as plt
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 
@@ -31,11 +30,15 @@ def load_questions_and_answers(question_type: str, question_set_dir: str = "./qu
         # 加载数学答案
         with open(os.path.join(base_path, "math_answer.txt"), "r", encoding="utf-8") as f:
             answers = re.findall(r"(\d+)【Answer】(\w+)", f.read())
-        answer_map = {qid: ans for qid, ans in answers}
+            answer_map = {qid: option.upper() for qid, option in answers}
 
         # 组合数据
         for idx, q in enumerate(questions, 1):
-            data[f"math_{idx}"] = {"question": q, "answer": answer_map.get(str(idx), "")}
+            data[f"math_{idx}"] = {
+                "question": q,
+                "answer_option": answer_map.get(str(idx), ""),
+                "answer_analysis": ""  # 数学题无分析文本
+            }
 
     elif question_type in ["logic", "read"]:
         # 加载逻辑/阅读理解题（假设文件名格式为logic_1.txt）
@@ -43,21 +46,22 @@ def load_questions_and_answers(question_type: str, question_set_dir: str = "./qu
             if filename.endswith(".txt") and "answer" not in filename:
                 qid = filename.split(".")[0]
                 with open(os.path.join(base_path, filename), "r", encoding="utf-8") as f:
-                    question = f.read()
+                    content = f.read()
+                    question = content.split("\n\n")[-1].strip()  # 获取最后一个问题
                 # 加载答案
                 answer_file = os.path.join(base_path, f"{qid}_answer.txt")
                 with open(answer_file, "r", encoding="utf-8") as f:
-                    answers = re.findall(r"(\d+\.\d+)【Answer】(\w+)", f.read())
-                answer_map = {aid: ans for aid, ans in answers}
-                # 分割子题目（例如1.1, 1.2）
-                sub_questions = re.split(r"\n\d+\.\d+\.", question)
-                for sub_q in sub_questions[1:]:
-                    lines = sub_q.strip().split("\n")
-                    aid = lines[0].split()[0]
-                    data[f"{qid}_{aid}"] = {
-                        "question": "\n".join(lines),
-                        "answer": answer_map.get(aid, "")
-                    }
+                    answer_content = f.read()
+                    # 匹配题号和答案
+                    answer_match = re.search(r"1\.【Answer】(\w+)?([\s\S]*)", answer_content)
+                    if answer_match:
+                        option = answer_match.group(1).upper() if answer_match.group(1) else ""
+                        analysis = answer_match.group(2).strip()
+                        data[f"{qid}_1"] = {
+                            "question": question,
+                            "answer_option": option,
+                            "answer_analysis": analysis
+                        }
     return data
 
 def get_model_response(qa_system: DocumentQASystem, question: str) -> Tuple[str, float]:
@@ -74,30 +78,81 @@ def get_model_response(qa_system: DocumentQASystem, question: str) -> Tuple[str,
     return response, latency
 
 
-def evaluate_response(model_answer: str, standard_answer: str) -> dict:
+def evaluate_response(model_answer: str, item: dict, q_type: str) -> dict:
     """
     计算accuracy和relevance
     """
+    metrics = {
+        "accuracy": 0.0,
+        "relevance": 0.0,
+        "completed_rate": 0.0
+    }
+
     # 提取模型答案选项
-    model_ans = ""
-    match = re.search(r"【Answer】\s*(\w+)", model_answer)  # 宽松匹配
-    if match:
-        model_ans = match.group(1).strip().upper()  # 统一转为大写
-    accuracy = 1.0 if model_ans == standard_answer.upper() else 0.0
-    relevance = compute_similarity(model_answer, standard_answer)
-    return {"accuracy": accuracy, "relevance": relevance}
+    option_match = re.search(r"【Answer】\s*([A-D])", model_answer, re.IGNORECASE)
+    model_option = option_match.group(1).upper() if option_match else ""
+
+    # 准确率评估（仅逻辑和数学题）
+    if q_type in ["logic", "math"]:
+        correct_option = item.get("answer_option", "").upper()
+        metrics["accuracy"] = 1.0 if model_option == correct_option else 0.0
+
+    # 相关性评估（逻辑和阅读题）
+    if q_type in ["logic", "read"]:
+        metrics["relevance"] = compute_similarity(model_answer, item["answer_analysis"])
+
+    # 完成度评估（逻辑题专用）
+    if q_type == "logic":
+        metrics["completed_rate"] = min(max(metrics["relevance"] * 1.5, 0.0), 1.0)  # 相关性越高完成度越高
+
+    return metrics
 
 # 相似度评分函数
-def compute_similarity(text1, text2):
-    tfidf = TfidfVectorizer().fit_transform([text1, text2])
-    return cosine_similarity(tfidf[0:1], tfidf[1:2])[0][0]
+# 方案1：基于 TF-IDF 的余弦相似度（轻量级）
+def compute_similarity(text1: str, text2: str) -> float:
+    """
+    计算文本相似度（范围 0~1）
+    """
+    # 预处理文本（可选）
+    text1 = text1.strip().lower()
+    text2 = text2.strip().lower()
+
+    # 空文本处理
+    if not text1 or not text2:
+        return 0.0
+
+    # 创建 TF-IDF 向量器
+    vectorizer = TfidfVectorizer()
+    tfidf_matrix = vectorizer.fit_transform([text1, text2])
+    # 计算余弦相似度
+    similarity = cosine_similarity(tfidf_matrix[0], tfidf_matrix[1])[0][0]
+    return round(max(similarity, 0.0), 2)  # 确保非负
+
+
+# ---------- 或 ---------- #
+
+# 方案2：基于 Sentence-BERT 的语义相似度（高精度，需GPU加速）
+# from sentence_transformers import SentenceTransformer
+#
+# # 加载预训练模型（首次运行需下载）
+# model = SentenceTransformer('paraphrase-multilingual-MiniLM-L12-v2')
+#
+#
+# def compute_similarity(text1: str, text2: str) -> float:
+#     """
+#     计算语义相似度（范围 0~1）
+#     """
+#     # 编码文本
+#     embeddings = model.encode([text1, text2], convert_to_tensor=True)
+#     similarity = cosine_similarity(embeddings[0].reshape(1, -1), embeddings[1].reshape(1, -1))[0][0]
+#     return round(max(similarity, 0.0), 2)
 
 def perform_auto_test(
         qa_system: DocumentQASystem,
         logic_count: int,
         read_count: int,
         math_count: int
-) -> Tuple[Dict[str, list], Dict[str, str]]:
+) -> Tuple[List[dict], Dict[str, str]]:
     """
     执行自动测试并返回结果
     """
@@ -111,57 +166,49 @@ def perform_auto_test(
 
     # 遍历所有注册的模型
     for model_name in qa_system.llm_registry.keys():
-        # 切换到当前模型
-        original_model = qa_system.current_model
         qa_system.current_model = model_name
         qa_system._release_model_resources()  # 释放前一个模型的资源
 
         # 测试逻辑题
         for qid, item in list(logic_data.items())[:logic_count]:
             response, latency = get_model_response(qa_system, item["question"])
-            metrics = evaluate_response(response, item["answer"])
+            metrics = evaluate_response(response, item, "logic")
             results.append({
                 "model": model_name,
                 "qid": qid,
                 "type": "logic",
                 "latency": latency,
-                **metrics,
-                "completed": 1 if metrics["accuracy"] > 0 else 0
+                **metrics
             })
-            standard_answers[qid] = item["answer"]
 
         # 测试阅读理解题
         for qid, item in list(read_data.items())[:read_count]:
             response, latency = get_model_response(qa_system, item["question"])
-            metrics = evaluate_response(response, item["answer"])
+            metrics = evaluate_response(response, item, "read")
             results.append({
                 "model": model_name,
                 "qid": qid,
                 "type": "read",
                 "latency": latency,
-                **metrics,
-                "completed": 1 if metrics["accuracy"] > 0 else 0
+                **metrics
             })
-            standard_answers[qid] = item["answer"]
 
         # 测试数学题
         for qid, item in list(math_data.items())[:math_count]:
             response, latency = get_model_response(qa_system, item["question"])
-            metrics = evaluate_response(response, item["answer"])
+            metrics = evaluate_response(response, item, "math")
             results.append({
                 "model": model_name,
                 "qid": qid,
                 "type": "math",
                 "latency": latency,
-                **metrics,
-                "completed": 1 if metrics["accuracy"] > 0 else 0
+                **metrics
             })
-            standard_answers[qid] = item["answer"]
 
     return results, standard_answers
 
 
-def export_to_excel(results: list, query: str, standard_answers: dict) -> str:
+def export_to_excel(results: list, standard_map: dict) -> str:
     """
     导出结果到Excel（保存到/compare_output目录）
     """
@@ -170,67 +217,65 @@ def export_to_excel(results: list, query: str, standard_answers: dict) -> str:
     os.makedirs(output_dir, exist_ok=True)
 
     df = pd.DataFrame(results)
-    df["standard_answer"] = df["qid"].map(standard_answers)
-
-    # 生成带时间戳的文件名
-    timestamp = time.strftime("%Y%m%d-%H%M%S")
-    filename = os.path.join(output_dir, f"autotest_compare_{timestamp}.xlsx")
-
+    filename = os.path.join(output_dir, f"autotest_{time.strftime('%Y%m%d-%H%M%S')}.xlsx")
     df.to_excel(filename, index=False)
     return filename
 
 
 def visualize_results(excel_path: str):
-    """
-    生成包含四个指标的综合对比图
-    """
+    """生成可视化报表"""
     df = pd.read_excel(excel_path)
 
-    # 设置中文字体支持
-    plt.rcParams['font.sans-serif'] = ['SimHei', 'Microsoft YaHei', 'SimSun', 'Arial Unicode MS']  # 优先使用的中文字体列表
-    plt.rcParams['axes.unicode_minus'] = False  # 解决负号显示问题
-    
-    # 创建画布和子图
-    fig, axes = plt.subplots(2, 2, figsize=(20, 15))
-    fig.suptitle("多模型性能综合对比", fontsize=16)
+    # 创建画布
+    plt.figure(figsize=(18, 14), dpi=100)
+    plt.rcParams['font.size'] = 12
 
-    # 指标列表和子图坐标
-    metrics = ["accuracy", "relevance", "latency", "completed"]
-    titles = ["准确率对比", "相关性对比", "延迟对比 (秒)", "任务完成率对比"]
-    positions = [(0, 0), (0, 1), (1, 0), (1, 1)]
+    # ================== 准确率对比 ==================
+    plt.subplot(2, 2, 1)
+    accuracy_data = df[df['type'].isin(['logic', 'math'])] \
+                        .groupby(['model', 'type'])['accuracy'].mean() * 100
+    accuracy_data.unstack().plot.bar()
+    plt.title('准确率对比（按题型）', pad=20)
+    plt.ylabel('准确率 (%)')
+    plt.ylim(0, 110)
+    plt.xticks(rotation=45, ha='right')
 
-    for i, metric in enumerate(metrics):
-        ax = axes[positions[i][0], positions[i][1]]
+    # 添加数值标签
+    for container in plt.gca().containers:
+        plt.bar_label(container, fmt='%.1f%%', label_type='edge', padding=3)
 
-        # 按模型和题型分组计算均值
-        pivot_data = df.groupby(["model", "type"])[metric].mean().unstack()
+    # ================== 相关性对比 ==================
+    plt.subplot(2, 2, 2)
+    relevance_data = df[df['type'].isin(['logic', 'read'])] \
+                         .groupby(['model', 'type'])['relevance'].mean() * 100
+    relevance_data.unstack().plot.bar(color=['#1f77b4', '#ff7f0e'])
+    plt.title('相关性对比（按题型）', pad=20)
+    plt.ylabel('相关性 (%)')
+    plt.ylim(0, 110)
+    plt.xticks(rotation=45, ha='right')
 
-        # 绘制柱状图
-        pivot_data.plot(kind="bar", ax=ax, rot=0, width=0.8)
+    # ================== 完成度对比 ==================
+    plt.subplot(2, 2, 3)
+    completion_data = df[df['type'] == 'logic'] \
+                          .groupby('model')['completed_rate'].mean() * 100
+    completion_data.plot.bar(color='#2ca02c')
+    plt.title('逻辑题完成度对比', pad=20)
+    plt.ylabel('完成度 (%)')
+    plt.ylim(0, 110)
+    plt.xticks(rotation=45, ha='right')
 
-        ax.set_title(titles[i], fontsize=12)
-        ax.set_xlabel("")
-        ax.grid(axis="y", linestyle="--", alpha=0.7)
+    # ================== 延迟对比 ==================
+    plt.subplot(2, 2, 4)
+    latency_data = df.groupby(['model', 'type'])['latency'].mean().unstack()
+    latency_data.plot.bar()
+    plt.title('平均延迟对比（按题型）', pad=20)
+    plt.ylabel('延迟 (秒)')
+    plt.xticks(rotation=45, ha='right')
 
-        # 特殊处理延迟的单位
-        if metric == "latency":
-            ax.set_ylabel("Seconds", fontsize=10)
-        else:
-            ax.set_ylabel("Score", fontsize=10)
+    # 调整布局
+    plt.tight_layout(pad=4, h_pad=3, w_pad=3)
 
-        # 添加数值标签
-        for p in ax.patches:
-            ax.annotate(
-                f"{p.get_height():.2f}",
-                (p.get_x() + p.get_width() / 2, p.get_height()),
-                ha="center", va="bottom", fontsize=8
-            )
-
-    # 调整布局并保存
-    plt.tight_layout(rect=[0, 0, 1, 0.96])
-    output_dir = os.path.dirname(excel_path)
-    timestamp = time.strftime("%Y%m%d-%H%M%S")
-    plot_path = os.path.join(output_dir, f"autotest_compare_plot_{timestamp}.png")
-    plt.savefig(plot_path)
-    plt.close()
+    # 保存图表
+    plot_path = excel_path.replace(".xlsx", "_visual.png")
+    plt.savefig(plot_path, bbox_inches='tight')
     print(f"可视化图表已保存至：{plot_path}")
