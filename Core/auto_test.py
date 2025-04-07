@@ -186,6 +186,10 @@ def visualize_results(excel_path: str):
     """
     df = pd.read_excel(excel_path)
 
+    # 设置中文字体支持
+    plt.rcParams['font.sans-serif'] = ['SimHei', 'Microsoft YaHei', 'SimSun', 'Arial Unicode MS']  # 优先使用的中文字体列表
+    plt.rcParams['axes.unicode_minus'] = False  # 解决负号显示问题
+    
     # 创建画布和子图
     fig, axes = plt.subplots(2, 2, figsize=(20, 15))
     fig.suptitle("多模型性能综合对比", fontsize=16)
