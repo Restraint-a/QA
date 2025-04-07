@@ -15,6 +15,8 @@ How to use?
 
    ollama pull deepseek-r1:7b
 
+   ollama pull gemma3:4b
+
    ollama run mistral
 
    Set environment variable:

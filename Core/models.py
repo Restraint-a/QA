@@ -35,6 +35,11 @@ class DocumentQASystem:
                 temperature=0.7,
                 num_ctx=4096,
             ),
+            "gemma3": Ollama(
+                model="gemma3:4b",
+                temperature=0.7,
+                num_ctx=4096,
+            ),
         }
 
     def _release_model_resources(self):
