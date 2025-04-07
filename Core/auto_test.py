@@ -260,6 +260,9 @@ def visualize_results(excel_path: str):
         ax2.set_ylabel('相关性 (%)')
         ax2.set_ylim(0, 110)
         ax2.tick_params(axis='x', rotation=45)
+        # 添加数值标签
+        for container in ax2.containers:
+            ax2.bar_label(container, fmt='%.1f%%', padding=3)
     else:
         ax2.text(0.5, 0.5, '无相关性数据', ha='center', va='center')
 
@@ -268,11 +271,13 @@ def visualize_results(excel_path: str):
     completion_data = df[df['type'] == 'logic'] \
                           .groupby('model')['completed_rate'].mean() * 100
     if not completion_data.empty:
-        completion_data.plot.bar(ax=ax3, color='#2ca02c')
+        bars = completion_data.plot.bar(ax=ax3, color='#2ca02c')
         ax3.set_title('逻辑题完成度对比', pad=15)
         ax3.set_ylabel('完成度 (%)')
         ax3.set_ylim(0, 110)
         ax3.tick_params(axis='x', rotation=45)
+        # 添加数值标签
+        ax3.bar_label(bars.containers[0], fmt='%.1f%%', padding=3)
     else:
         ax3.text(0.5, 0.5, '无完成度数据', ha='center', va='center')
 
@@ -284,6 +289,9 @@ def visualize_results(excel_path: str):
         ax4.set_title('平均延迟对比（按题型）', pad=15)
         ax4.set_ylabel('延迟 (秒)')
         ax4.tick_params(axis='x', rotation=45)
+        # 添加数值标签
+        for container in ax4.containers:
+            ax4.bar_label(container, fmt='%.1f', padding=3)
     else:
         ax4.text(0.5, 0.5, '无延迟数据', ha='center', va='center')
 
