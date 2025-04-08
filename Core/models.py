@@ -18,7 +18,7 @@ class DocumentQASystem:
         self.conversation_chain = None
 
     def _init_models(self):
-        """初始化模型实例并缓存"""
+        """Initialize model instances and cache"""
         return {
             "mistral": Ollama(
                 model="mistral",
@@ -38,7 +38,7 @@ class DocumentQASystem:
         }
 
     def _release_model_resources(self):
-        """彻底释放模型资源"""
+        """Complete release of model resources"""
         for model in self.llm_registry.values():
             if hasattr(model, 'client'):
                 del model.client
@@ -46,22 +46,22 @@ class DocumentQASystem:
             torch.cuda.empty_cache()
             
     def get_gpu_memory_usage(self):
-        """获取当前GPU显存使用情况"""
+        """Get current GPU memory usage"""
         try:
             
-            # 多次采样以获取更稳定的结果和峰值
+            # Multiple samples for more stable results and peaks
             samples = []
             peak_memory = {}
             
-            for _ in range(3):  # 采样3次
-                # 使用nvidia-smi命令获取GPU信息 - 移除utilization.gpu参数
+            for _ in range(3):  # Sampling 3 times
+                # Getting GPU information with the nvidia-smi command
                 result = subprocess.check_output(
                     ['nvidia-smi', '--query-gpu=name,memory.total,memory.used,memory.free', 
                      '--format=csv,noheader,nounits'],
                     encoding='utf-8'
                 )
                 
-                # 解析结果
+                # parse result
                 current_sample = {}
                 for i, line in enumerate(result.strip().split('\n')):
                     parts = line.split(', ')
@@ -70,7 +70,7 @@ class DocumentQASystem:
                     used = float(parts[2].strip())
                     free = float(parts[3].strip())
                     
-                    # 初始化或更新峰值
+                    # Initialize or update peak values
                     if f"gpu_{i}" not in peak_memory or used > peak_memory[f"gpu_{i}"]:
                         peak_memory[f"gpu_{i}"] = used
                     
@@ -81,9 +81,9 @@ class DocumentQASystem:
                         "free_memory_mb": free,
                     }
                 samples.append(current_sample)
-                time.sleep(0.5)  # 间隔0.5秒再次采样
+                time.sleep(0.5)  # Re-sampling after 0.5 second intervals
             
-            # 计算平均值
+            # Calculation of average values
             memory_stats = {}
             for device_id in samples[0].keys():
                 device_samples = [sample[device_id] for sample in samples]
@@ -97,16 +97,16 @@ class DocumentQASystem:
             
             return {"available": True, "devices": memory_stats}
         except Exception as e:
-            # 如果nvidia-smi不可用，回退到PyTorch方法
+            # If nvidia-smi is not available, fallback to PyTorch method
             if not torch.cuda.is_available():
                 return {"available": False, "message": "CUDA不可用"}
             
-            # 获取GPU数量
+            # Get the number of GPUs
             device_count = torch.cuda.device_count()
             memory_stats = {}
             
             for i in range(device_count):
-                # 获取总显存和已用显存(MB)
+                # Get total memory and used memory (MB)
                 total_memory = torch.cuda.get_device_properties(i).total_memory / (1024 * 1024)
                 reserved_memory = torch.cuda.memory_reserved(i) / (1024 * 1024)
                 allocated_memory = torch.cuda.memory_allocated(i) / (1024 * 1024)
@@ -117,7 +117,7 @@ class DocumentQASystem:
                     "total_memory_mb": round(total_memory, 2),
                     "used_memory_mb": round(allocated_memory, 2),
                     "free_memory_mb": round(free_memory, 2),
-                    "peak_memory_mb": round(allocated_memory, 2),  # PyTorch方式下使用当前分配作为峰值
+                    "peak_memory_mb": round(allocated_memory, 2),  # The PyTorch approach uses the current allocation as a peak
                 }
             
             return {"available": True, "devices": memory_stats}

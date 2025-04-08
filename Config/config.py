@@ -3,14 +3,14 @@ import os
 import logging
 import warnings
 
-# 屏蔽不必要的警告
+# ignore unnecessary warnings
 warnings.filterwarnings("ignore")
 
-# 日志配置
+# Log Configuration
 logging.basicConfig(
     level=logging.ERROR,
     format='%(asctime)s - %(levelname)s - %(message)s'
 )
 
-# 环境变量设置
+# Environment variable settings
 os.environ["TOKENIZERS_PARALLELISM"] = "false"

@@ -16,12 +16,6 @@ B.3
 C.6
 D.1
 
-4. A certain unit organized a networking activity, 50% of the sales department participated, 60% of the network department participated, and the number of the network department participated was 6 more than that of the sales department. Later, due to urgent work, 60% of the remaining employees in the sales department and 50% of the network department were selected to form a working group of 30 people. How many employees does the unit have?
-A.60
-B.75
-C.90
-D.120
-
 6. An open-air pool filled with water, separately open a drain, 5 hours can discharge a quarter of the total water; Open the B drain separately, and one third of the total water can be discharged in four hours. If the pool only opens the B drain on a rainy day, it takes 20 hours to empty the pool, assuming that the rain water speed is constant, ask how long it takes to drain the water with both A and B drains at the same time in rainy weather.
 A.8 hours
 B. Nine hours

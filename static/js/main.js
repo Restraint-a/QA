@@ -1,4 +1,4 @@
-// main.js - 智能问答系统前端交互脚本
+// main.js - Intelligent Q&A System Frontend Interaction Script
 
 document.addEventListener('DOMContentLoaded', function() {
     // 获取DOM元素
@@ -81,7 +81,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const messageDiv = document.createElement('div');
         messageDiv.className = `message ${isUser ? 'user-message' : 'bot-message'}`;
         
-        let headerText = isUser ? '您' : model;
+        let headerText = isUser ? 'You' : model;
         const headerDiv = document.createElement('div');
         headerDiv.className = 'message-header';
         headerDiv.textContent = headerText;
@@ -104,12 +104,12 @@ document.addEventListener('DOMContentLoaded', function() {
             
             const likeBtn = document.createElement('button');
             likeBtn.className = 'feedback-btn';
-            likeBtn.innerHTML = '<i class="bi bi-hand-thumbs-up"></i> 赞同';
+            likeBtn.innerHTML = '<i class="bi bi-hand-thumbs-up"></i> Agree';
             likeBtn.addEventListener('click', () => handleFeedback('like', messageDiv));
             
             const dislikeBtn = document.createElement('button');
             dislikeBtn.className = 'feedback-btn';
-            dislikeBtn.innerHTML = '<i class="bi bi-hand-thumbs-down"></i> 不赞同';
+            dislikeBtn.innerHTML = '<i class="bi bi-hand-thumbs-down"></i> Disagree';
             dislikeBtn.addEventListener('click', () => {
                 activeMessageElement = messageDiv;
                 feedbackModal.show();
@@ -157,11 +157,11 @@ document.addEventListener('DOMContentLoaded', function() {
                 addMessage(messagesContainer, data.response, false, data.model);
             } else {
                 // 显示错误
-                addMessage(messagesContainer, `错误: ${data.error}`, false, '系统');
+                addMessage(messagesContainer, `Error: ${data.error}`, false, 'System');
             }
         } catch (error) {
-            console.error('请求错误:', error);
-            addMessage(messagesContainer, `网络错误: ${error.message}`, false, '系统');
+            console.error('Request Error:', error);
+            addMessage(messagesContainer, `Network Error: ${error.message}`, false, 'System');
         } finally {
             hideLoading();
         }
@@ -204,7 +204,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         // 添加更新标记
                         const headerDiv = messageElement.querySelector('.message-header');
                         if (headerDiv) {
-                            headerDiv.textContent += ' (已改进)';
+                            headerDiv.textContent += ' (Improved)';
                         }
                         
                         // 更新时间
@@ -220,14 +220,14 @@ document.addEventListener('DOMContentLoaded', function() {
                         }
                     }
                     
-                    alert('感谢您的反馈！回答已改进。');
+                    alert('Thank you for your feedback! Answer has been improved.');
                 }
             } else {
-                alert(`反馈提交失败: ${result.error}`);
+                alert(`Feedback submission error: ${result.error}`);
             }
         } catch (error) {
-            console.error('反馈提交错误:', error);
-            alert(`反馈提交错误: ${error.message}`);
+            console.error('Feedback submission error:', error);
+            alert(`Feedback submission error: ${error.message}`);
         } finally {
             hideLoading();
         }
@@ -238,7 +238,7 @@ document.addEventListener('DOMContentLoaded', function() {
         event.preventDefault();
         
         if (!documentFile.files[0]) {
-            alert('请选择文件');
+            alert('Please select file');
             return;
         }
         
@@ -262,13 +262,13 @@ document.addEventListener('DOMContentLoaded', function() {
                 // 清空文件选择
                 documentFile.value = '';
                 // 添加系统消息
-                addMessage(docChatMessages, `文档 "${fileName}" 已成功加载，您现在可以提问关于文档的问题。`, false, '系统');
+                addMessage(docChatMessages, `The document "${fileName}" has been successfully loaded and you can now ask questions about the document.`, false, 'System');
             } else {
-                alert(`文件上传失败: ${result.error}`);
+                alert(`Upload Error: ${result.error}`);
             }
         } catch (error) {
-            console.error('上传错误:', error);
-            alert(`上传错误: ${error.message}`);
+            console.error('Upload Error:', error);
+            alert(`Upload Error: ${error.message}`);
         } finally {
             hideLoading();
         }
@@ -278,7 +278,7 @@ document.addEventListener('DOMContentLoaded', function() {
     async function handleCompare() {
         const query = compareQuery.value.trim();
         if (!query) {
-            alert('请输入查询内容');
+            alert('Please enter your query');
             return;
         }
         
@@ -299,13 +299,13 @@ document.addEventListener('DOMContentLoaded', function() {
             if (response.ok) {
                 // 创建结果标题
                 const titleDiv = document.createElement('h4');
-                titleDiv.textContent = '比较结果';
+                titleDiv.textContent = 'Comparing Result:';
                 compareResults.appendChild(titleDiv);
                 
                 // 创建查询信息
                 const queryDiv = document.createElement('div');
                 queryDiv.className = 'alert alert-info';
-                queryDiv.textContent = `查询: ${query}`;
+                queryDiv.textContent = `Query: ${query}`;
                 compareResults.appendChild(queryDiv);
                 
                 // 为每个模型创建结果卡片
@@ -334,10 +334,10 @@ document.addEventListener('DOMContentLoaded', function() {
                         
                         // 添加各项指标
                         const metrics = [
-                            { label: '延迟', value: result.latency },
-                            { label: '估计令牌数', value: result.tokens },
-                            { label: '令牌生成速度', value: `${result.tokens_per_second} tokens/s` },
-                            { label: '响应长度', value: `${result.response_length} 字符` }
+                            { label: 'Latency', value: result.latency },
+                            { label: 'Estimated number of tokens', value: result.tokens },
+                            { label: 'Token Consumption Rate', value: `${result.tokens_per_second} tokens/s` },
+                            { label: 'Response Length', value: `${result.response_length} 字符` }
                         ];
                         
                         metrics.forEach(metric => {
@@ -375,13 +375,13 @@ document.addEventListener('DOMContentLoaded', function() {
                                 
                                 const memoryDiff = document.createElement('div');
                                 memoryDiff.className = 'metric-value';
-                                memoryDiff.textContent = `显存变化: ${gpuStats.memory_diff_mb} MB`;
+                                memoryDiff.textContent = `GPU Memory Change: ${gpuStats.memory_diff_mb} MB`;
                                 deviceDiv.appendChild(memoryDiff);
                                 
                                 if (gpuStats.peak_memory_mb) {
                                     const peakMemory = document.createElement('div');
                                     peakMemory.className = 'metric-value';
-                                    peakMemory.textContent = `峰值显存: ${gpuStats.peak_memory_mb} MB`;
+                                    peakMemory.textContent = `GPU Memory Peak: ${gpuStats.peak_memory_mb} MB`;
                                     deviceDiv.appendChild(peakMemory);
                                 }
                                 
@@ -394,7 +394,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         // 显示响应内容
                         const responseTitle = document.createElement('h6');
                         responseTitle.className = 'mt-3 mb-2';
-                        responseTitle.textContent = '响应内容:';
+                        responseTitle.textContent = 'Response:';
                         bodyDiv.appendChild(responseTitle);
                         
                         const responseDiv = document.createElement('div');
@@ -411,20 +411,20 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (data.export_file) {
                     const exportDiv = document.createElement('div');
                     exportDiv.className = 'alert alert-success mt-3';
-                    exportDiv.textContent = `结果已导出至: ${data.export_file}`;
+                    exportDiv.textContent = `Results have been exported to: ${data.export_file}`;
                     compareResults.appendChild(exportDiv);
                 }
             } else {
                 const errorDiv = document.createElement('div');
                 errorDiv.className = 'alert alert-danger';
-                errorDiv.textContent = `比较失败: ${data.error}`;
+                errorDiv.textContent = `Comparison Error: ${data.error}`;
                 compareResults.appendChild(errorDiv);
             }
         } catch (error) {
-            console.error('比较错误:', error);
+            console.error('Comparison Error:', error);
             const errorDiv = document.createElement('div');
             errorDiv.className = 'alert alert-danger';
-            errorDiv.textContent = `比较错误: ${error.message}`;
+            errorDiv.textContent = `Comparison Error: ${error.message}`;
             compareResults.appendChild(errorDiv);
         } finally {
             hideLoading();
@@ -440,7 +440,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const mathValue = parseInt(mathCount.value) || 0;
         
         if (logicValue <= 0 && readValue <= 0 && mathValue <= 0) {
-            alert('请至少选择一种题型进行测试');
+            alert('Please select at least one question type to test');
             return;
         }
         
@@ -465,13 +465,13 @@ document.addEventListener('DOMContentLoaded', function() {
             if (response.ok) {
                 // 创建结果标题
                 const titleDiv = document.createElement('h4');
-                titleDiv.textContent = '测试结果';
+                titleDiv.textContent = 'Test Result';
                 testResults.appendChild(titleDiv);
                 
                 // 创建测试信息
                 const infoDiv = document.createElement('div');
                 infoDiv.className = 'alert alert-info';
-                infoDiv.textContent = `已完成测试: ${logicValue}道逻辑题, ${readValue}道阅读理解题, ${mathValue}道数学题`;
+                infoDiv.textContent = `Completed tests: ${logicValue} logic questions, ${readValue} reading comprehension questions, ${mathValue} math questions.`;
                 testResults.appendChild(infoDiv);
                 
                 // 如果有图表文件，显示图表
@@ -479,7 +479,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     const chartImg = document.createElement('img');
                     chartImg.src = data.chart_file + '?t=' + new Date().getTime(); // 添加时间戳防止缓存
                     chartImg.className = 'img-fluid mt-3 mb-3';
-                    chartImg.alt = '测试结果图表';
+                    chartImg.alt = 'Test Result Chart';
                     testResults.appendChild(chartImg);
                 }
                 
@@ -487,20 +487,20 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (data.export_file) {
                     const exportDiv = document.createElement('div');
                     exportDiv.className = 'alert alert-success mt-3';
-                    exportDiv.textContent = `详细结果已导出至: ${data.export_file}`;
+                    exportDiv.textContent = `Detailed results have been exported to. ${data.export_file}`;
                     testResults.appendChild(exportDiv);
                 }
             } else {
                 const errorDiv = document.createElement('div');
                 errorDiv.className = 'alert alert-danger';
-                errorDiv.textContent = `测试失败: ${data.error}`;
+                errorDiv.textContent = `Test error: ${data.error}`;
                 testResults.appendChild(errorDiv);
             }
         } catch (error) {
-            console.error('测试错误:', error);
+            console.error('Test error:', error);
             const errorDiv = document.createElement('div');
             errorDiv.className = 'alert alert-danger';
-            errorDiv.textContent = `测试错误: ${error.message}`;
+            errorDiv.textContent = `Test error: ${error.message}`;
             testResults.appendChild(errorDiv);
         } finally {
             hideLoading();
@@ -535,6 +535,6 @@ document.addEventListener('DOMContentLoaded', function() {
     });
     
     // 添加欢迎消息
-    addMessage(chatMessages, '欢迎使用智能问答系统！请输入您的问题。', false, '系统');
-    addMessage(docChatMessages, '请先上传文档，然后您可以提问关于文档的问题。', false, '系统');
+    addMessage(chatMessages, 'Welcome to the Intelligent Q&A System!Please enter your question.', false, 'System');
+    addMessage(docChatMessages, 'Please upload the document first, then you can ask questions about the document.', false, 'System');
 });

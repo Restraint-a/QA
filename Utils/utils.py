@@ -10,15 +10,15 @@ FEEDBACK_PATH = "./feedback_data"
 
 def print_help():
     print("""
-🔧 系统指令手册：
-    /switch [mistral|qwen|gemma3]  - 切换大语言模型
-    /compare [问题]         - 对比模型性能
-    /help                  - 显示帮助信息
-    /upload                - 上传文档进入问答模式
-    /autotest              - 自动测试
-    /like                  - 赞同上一次回答
-    /dislike [原因]         - 不赞同上一次回答，可提供原因
-    /exit/quit              - 退出系统
+🔧 System Commands:
+    /switch [mistral|qwen|gemma3|]  - Switch LLM
+    /compare [Question]         - Compare model performance
+    /help                  - Show help
+    /upload                - Upload a document to enter document Q&A mode
+    /autotest              - Automatic testing
+    /like                  - Agree with previous answer
+    /dislike [Reason]         - Disagree with previous answer, and provide reasons
+    /exit/quit              - Exit system
 """)
 
 def export_to_excel(results, query):
@@ -27,10 +27,10 @@ def export_to_excel(results, query):
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         filename = f"model_comparison_{timestamp}.xlsx"
 
-        # 组装数据
+        # Assembly data
         data = []
         for model_name, result in results.items():
-            # 基本信息
+            # Basic Information
             row = {
                 "Model": model_name.upper(),
                 "Query": safe_query,
@@ -41,69 +41,68 @@ def export_to_excel(results, query):
                 "Memory Usage (MB)": result.get("memory_usage", "N/A"),
             }
             
-            # 添加GPU显存信息 - 只保留显存使用峰值和变化
+            # Add GPU Memory Information
             if "gpu_memory_diff" in result and result["gpu_memory_diff"]:
                 for device_id, gpu_stats in result["gpu_memory_diff"].items():
-                    # 只保留显存使用变化和峰值
+                    # Only memory usage variations and peaks are preserved
                     row[f"Memory_Diff_MB"] = gpu_stats["memory_diff_mb"]
                     if "peak_memory_mb" in gpu_stats:
                         row[f"Peak_Memory_MB"] = gpu_stats["peak_memory_mb"]
                 
             
-            # 添加响应内容
+            # Add response content
             row["Response"] = result["response"]
             data.append(row)
             
-        # 创建DataFrame并导出
+        # Create DataFrame and export
         df = pd.DataFrame(data)
         
-        # 确保输出目录存在
+        # Make sure the output directory exists
         os.makedirs(DEFAULT_PATH, exist_ok=True)
         output_path = os.path.join(DEFAULT_PATH, filename)
         
-        # 导出到Excel
+        # Export to Excel
         df.to_excel(output_path, index=False)
         return output_path
     except Exception as e:
-        logging.error(f"导出失败: {str(e)}")
+        logging.error(f"Export failed: {str(e)}")
         return None
 
 def generate_improved_prompt(query, response, feedback, reason=None):
-    """根据用户反馈生成改进的提示词"""
+    """Generate improved prompt words based on user feedback"""
     if feedback == "like":
-        # 如果用户喜欢这个回答，记录这种模式以便将来使用
-        return None  # 不需要修改提示词
+        # If the user likes the response, record this pattern
+        return None  # No need to change the cue word
     
-    # 用户不喜欢回答时，生成改进的提示词
+    # Generate improved prompt words when users don't like the answer
     improved_prompt = f"""
-        我之前的回答不够好。原问题是: 
+        My previous answer was not good enough.The original question was:
         "{query}"
 
-        我的回答是:
+        My answer was:
         "{response}"
 
-        用户反馈: 不满意
+        User feedback: Dissatisfied
         """
     
     if reason:
-        improved_prompt += f"原因: {reason}\n"
+        improved_prompt += f"Reason: {reason}\n"
     
     improved_prompt += """
-        请根据以上反馈，提供一个更好的回答。注意:
-        1. 保持回答的准确性和相关性
-        2. 提供更详细的解释和例子
-        3. 确保回答逻辑清晰，易于理解
+        Please provide a better answer based on the above feedback.Notes.
+        1. keep your answer accurate and relevant
+        2. Provide more detailed explanations and examples
+        3. Make sure the answer is logical and easy to understand
         """
     
     return improved_prompt
 
 def save_feedback_data(query, response, model_name, feedback, improved_response=None, reason=None):
-    """保存用户反馈数据"""
+    """Save user feedback data"""
     try:
-        # 确保反馈目录存在
         os.makedirs(FEEDBACK_PATH, exist_ok=True)
         
-        # 准备反馈数据
+        # Prepare feedback data
         timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         feedback_data = {
             "Timestamp": [timestamp],
@@ -115,20 +114,20 @@ def save_feedback_data(query, response, model_name, feedback, improved_response=
             "Improved Response": [improved_response if improved_response else ""]
         }
         
-        # 创建或追加到反馈文件
+        # Create or append to a feedback file
         feedback_file = os.path.join(FEEDBACK_PATH, "user_feedback.xlsx")
         
-        # 如果文件存在，追加数据
+        # Append data if file exists
         if os.path.exists(feedback_file):
             existing_df = pd.read_excel(feedback_file)
             new_df = pd.DataFrame(feedback_data)
             combined_df = pd.concat([existing_df, new_df], ignore_index=True)
             combined_df.to_excel(feedback_file, index=False)
         else:
-            # 创建新文件
+            # Create a new file
             pd.DataFrame(feedback_data).to_excel(feedback_file, index=False)
             
         return feedback_file
     except Exception as e:
-        logging.error(f"保存反馈失败: {str(e)}")
+        logging.error(f"Failed to save feedback: {str(e)}")
         return None

@@ -11,13 +11,13 @@ from Core.document_loader import load_document
 from Core.auto_test import perform_auto_test, visualize_results
 from Utils.utils import print_help, export_to_excel, generate_improved_prompt, save_feedback_data
 
-# 全局变量，用于存储最近的查询和响应
+# Global variable for storing recent queries and responses
 last_query = None
 last_response = None
 last_model = None
 
 def process_command(command: str, qa_system: DocumentQASystem) -> bool:
-    """处理系统命令"""
+    """Processing system commands"""
     global last_query, last_response, last_model
     
     command = command.strip().lower()
@@ -28,69 +28,69 @@ def process_command(command: str, qa_system: DocumentQASystem) -> bool:
             qa_system.current_model = model_name
             qa_system._release_model_resources()
             qa_system.conversation_chain = None
-            print(f"已切换到 {model_name.upper()} 模型")
+            print(f"Switched to {model_name.upper()} model")
             return True
         else:
-            print(f"❌ 无效模型，可用选项：{list(qa_system.llm_registry.keys())}")
+            print(f"❌ Invalid model with available options:{list(qa_system.llm_registry.keys())}")
             return False
 
-    # 处理用户反馈 - 赞同
+    # Handling user feedback - Agree
     elif command == "/like":
         if not last_query or not last_response:
-            print("❌ 没有找到可以评价的上一次对话")
+            print("❌ No previous conversations found!")
             return False
         
-        print("✅ 感谢您的反馈！我们会继续保持这样的回答质量。")
+        print("✅ Thank you for your feedback!")
         save_feedback_data(last_query, last_response, last_model, "like")
         return True
     
-    # 处理用户反馈 - 不赞同
+    # Handling User Feedback - Disagree
     elif command.startswith("/dislike"):
         if not last_query or not last_response:
-            print("❌ 没有找到可以评价的上一次对话")
+            print("❌ No previous conversations found!")
             return False
         
-        # 提取反馈原因
+        # Reasons for feedback
         reason = command[8:].strip() if len(command) > 8 else None
         if not reason:
-            reason = input("请简单描述您不满意的原因: ")
+            reason = input("Please briefly describe the reason for your dissatisfaction. ")
         
-        print("🔄 正在根据您的反馈生成改进的回答...")
+        print("🔄 Improved responses are being generated based on your feedback...")
         
-        # 生成改进的提示词
+        # Generate improved prompts
         improved_prompt = generate_improved_prompt(last_query, last_response, "dislike", reason)
         
-        # 使用改进的提示词重新生成回答
+        # Re-generate responses using improved prompts
         try:
             model = qa_system.llm_registry[qa_system.current_model]
             
-            # 组合原始查询和改进提示词
-            combined_prompt = f"{improved_prompt}\n\n原始问题: {last_query}"
+            # Combining original queries and improving prompt words
+            combined_prompt = f"{improved_prompt}\n\nOriginal question:{last_query}"
             
-            # 重新生成回答
+            # Re-generate the answer
             improved_response = model.invoke(combined_prompt)
             
-            print(f"\n{qa_system.current_model.upper()} (改进后):", improved_response)
+            print(f"\n{qa_system.current_model.upper()} (After improvement):", improved_response)
             
-            # 保存反馈和改进的回答
+            # Preservation of feedback and improved responses
             save_feedback_data(last_query, last_response, last_model, "dislike", 
                               improved_response, reason)
             
-            # 更新最近的响应
+            # Update Recent Responses
             last_response = improved_response
             
         except Exception as e:
-            error_msg = f"❌ 生成改进回答时出错：{str(e)}"
+            error_msg = f"❌ Error when generating improved responses:{str(e)}"
             logging.error(error_msg)
             print(error_msg)
         
         return True
 
-    # main.py 中的 /compare 命令处理部分
+    # The /compare command processing section of main.py
     elif command.startswith("/compare"):
         query_part = command[8:].strip()
         if not query_part:
-            print("请输入多行查询（输入空行结束）：")
+            print("Please enter a multi-line query (enter a blank line to end):")
             lines = []
             while True:
                 line = input().rstrip()
@@ -102,32 +102,32 @@ def process_command(command: str, qa_system: DocumentQASystem) -> bool:
             query = query_part
 
         if not query:
-            print("请提供查询内容，格式：/compare [查询内容]")
+            print("Please provide the query in the format: /compare [query]")
             return False
 
-        print(f"\n正在比较各模型的响应...")
+        print(f"\nThe responses of the models are being compared...")
         results = {}
         for name, model in qa_system.llm_registry.items():
             try:
-                # 强制执行垃圾回收
+                # Enforce garbage collection
                 import gc
                 gc.collect()
                 if torch.cuda.is_available():
                     torch.cuda.empty_cache()
                 
-                # 等待系统稳定
+                # Waiting for the system to stabilize
                 time.sleep(2)
                 
-                # 记录开始时的内存和显存使用
+                # Record memory and GPU memory usage at the start
                 process = psutil.Process(os.getpid())
-                memory_before = process.memory_info().rss / 1024 / 1024  # 转换为MB
+                memory_before = process.memory_info().rss / 1024 / 1024  # Convert to MB
                 
-                # 记录开始时的GPU显存使用
+                # Record the GPU memory usage at the beginning of the record
                 gpu_memory_before = qa_system.get_gpu_memory_usage()
                 
                 start_time = time.time()
-                if qa_system.qa_chain:  # 检查是否有文档上传
-                    # 使用 qa_chain 生成基于文档的回答
+                if qa_system.qa_chain:  # Check for document uploads
+                    # Generating document-based answers with qa_chain
                     qa_system.qa_chain = RetrievalQA.from_chain_type(
                         llm=model,
                         chain_type="stuff",
@@ -135,37 +135,36 @@ def process_command(command: str, qa_system: DocumentQASystem) -> bool:
                         return_source_documents=True
                     )
                     result = qa_system.qa_chain({"query": query})
-                    response = f"{result['result']}\n📚 来源：{result['source_documents'][0].metadata['source']}"
+                    response = f"{result['result']}\n📚 Source:{result['source_documents'][0].metadata['source']}"
                 else:
-                    # 没有文档上传，直接调用模型
+                    # No document upload, direct model call
                     response = model.invoke(query)
                 end_time = time.time()
                 
-                # 记录结束时的内存使用
-                memory_after = process.memory_info().rss / 1024 / 1024  # 转换为MB
+                # End-of-record memory usage
+                memory_after = process.memory_info().rss / 1024 / 1024  # Convert to MB
                 memory_usage = memory_after - memory_before
                 
-                # 等待系统稳定后再测量显存
+                # Waiting for the system to stabilize
                 time.sleep(2)
                 
-                # 强制执行垃圾回收
+                # Enforce garbage collection
                 gc.collect()
                 if torch.cuda.is_available():
                     torch.cuda.empty_cache()
                     
-                # 记录结束时的GPU显存使用
+                # GPU memory usage at the end
                 gpu_memory_after = qa_system.get_gpu_memory_usage()
                 
-                # 计算GPU显存变化
+                # Calculating GPU Memory Changes
                 gpu_memory_diff = {}
                 if gpu_memory_before["available"] and gpu_memory_after["available"]:
                     for device_id, before_stats in gpu_memory_before["devices"].items():
                         after_stats = gpu_memory_after["devices"][device_id]
-                        
-                        # 只计算显存使用变化，不再计算利用率
+
                         memory_diff = round(after_stats["used_memory_mb"] - before_stats["used_memory_mb"], 2)
                         
-                        # 获取峰值显存使用
+                        # Getting Peak Memory Usage
                         peak_memory = after_stats.get("peak_memory_mb", after_stats["used_memory_mb"])
                         
                         gpu_memory_diff[device_id] = {
@@ -176,11 +175,11 @@ def process_command(command: str, qa_system: DocumentQASystem) -> bool:
                 
                 latency = end_time - start_time
                 
-                # 估算令牌数量 (简单估计，每个单词约1.3个令牌)
+                # Estimating the number of tokens (a simple estimate of about 1.3 tokens per word)
                 response_words = len(response.split())
                 estimated_tokens = int(response_words * 1.3)
                 
-                # 计算令牌生成速度
+                # Calculate the speed of token consumption
                 tokens_per_second = estimated_tokens / latency if latency > 0 else 0
                 
                 results[name] = {
@@ -193,59 +192,59 @@ def process_command(command: str, qa_system: DocumentQASystem) -> bool:
                     "gpu_memory_diff": gpu_memory_diff
                 }
                 
-                # 释放资源
+                # Release of resources
                 del response
                 qa_system._release_model_resources()
             except Exception as e:
-                print(f"{name.upper()} 调用出错：{str(e)}")
+                print(f"{name.upper()} call went wrong:{str(e)}")
 
-        print("\n比较结果：")
+        print("\nCompare results:")
         for model_name, data in results.items():
             print(f"{model_name.upper()}:")
-            print(f"延迟：{data['latency']}")
-            print(f"估计令牌数：{data['tokens']}")
-            print(f"令牌生成速度：{data['tokens_per_second']} tokens/s")
-            print(f"响应长度：{data['response_length']} 字符")
-            print(f"内存使用：{data['memory_usage']} MB")
+            print(f"Latency:{data['latency']}")
+            print(f"Estimated token num:{data['tokens']}")
+            print(f"Estimated token consumption rate:{data['tokens_per_second']} tokens/s")
+            print(f"Response length: {data['response_length']} characters")
+            print(f"Memory usage:{data['memory_usage']} MB")
             
-            # 显示GPU显存使用情况
+            # Show GPU Memory Usage
             if "gpu_memory_diff" in data and data["gpu_memory_diff"]:
-                print("GPU显存使用情况:")
+                print("GPU Memory Usage:")
                 for device_id, gpu_stats in data["gpu_memory_diff"].items():
                     print(f"  {gpu_stats['device_name']}:")
-                    print(f"    显存使用变化: {gpu_stats['memory_diff_mb']} MB")
+                    print(f"    GPU Memory Usage Changes: {gpu_stats['memory_diff_mb']} MB")
                     if "peak_memory_mb" in gpu_stats:
-                        print(f"    显存使用峰值: {gpu_stats['peak_memory_mb']} MB")
+                        print(f"    GPU Memory Usage: {gpu_stats['peak_memory_mb']} MB")
             else:
-                print("GPU显存信息: 不可用")
+                print("GPU Memory Information: Unavailable")
             
-            print(f"响应预览：{data['response'][:100]}...\n")
+            print(f"Response Preview:{data['response'][:100]}...\n")
 
         export_file = export_to_excel(results, query)
         if export_file:
-            print(f"\n已导出结果至：{os.path.abspath(export_file)}")
+            print(f"\nResults have been exported to:{os.path.abspath(export_file)}")
         else:
-            print("❌ \n导出结果失败")
+            print("❌ \nFailed to export results")
         return True
 
-    # /autotest - 自动测试命令
+    # /autotest
     elif command.startswith("/autotest"):
-        # 询问测试数量
-        logic_count = int(input("测试的逻辑题数量："))
-        read_count = int(input("测试的阅读理解题数量："))
-        math_count = int(input("测试的数学题数量："))
+        # Ask for the number of tests
+        logic_count = int(input("The number of logic questions for testing:"))
+        read_count = int(input("The number of reading questions for testing:"))
+        math_count = int(input("The number of math questions for testing:"))
 
-        # 调用相关函数加载问题并进行测试
-        print(f"开始自动测试 {logic_count} 道逻辑题，{read_count} 道阅读理解题，{math_count} 道数学题...")
+        # Call the relevant function to load the problem and test it
+        print(f"Start automated testing with {logic_count} logic questions, {read_count} reading comprehension questions, {math_count} math questions...")
         results, standard_answers = perform_auto_test(qa_system, logic_count, read_count, math_count)
 
-        # 导出并可视化结果
+        # Export and visualize results
         export_file = Core.auto_test.export_to_excel(results, standard_answers)
         if export_file:
-            print(f"\n测试结果已导出至：{os.path.abspath(export_file)}")
-            visualize_results(export_file)  # 生成可视化图表
+            print(f"\nTest results have been exported to:{os.path.abspath(export_file)}")
+            visualize_results(export_file)  # Generate visualization charts
         else:
-            print("❌ 导出结果失败")
+            print("❌ Failed to export results")
 
         return True
 
@@ -254,18 +253,18 @@ def process_command(command: str, qa_system: DocumentQASystem) -> bool:
         return True
 
     elif command == "/upload":
-        file_path = input("📂 请输入文件路径：").strip()
+        file_path = input("📂 Please enter the file path:").strip()
         if not os.path.exists(file_path):
-            print("❌ 文件不存在")
+            print("❌ File does not exist!")
             return False
         if load_document(qa_system, file_path):
-            print("📄  文档加载成功")
+            print("📄  Document Loaded Successfully")
             return True
-        print("❌ 文档加载失败")
+        print("❌ Document Load Failure")
         return False
 
     else:
-        print("❌ 未知命令，输入/help查看帮助")
+        print("❌ Unknown command, type /help for help")
         return False
 
 def process_query(query: str, qa_system: DocumentQASystem, current_model: str) -> None:
@@ -275,7 +274,7 @@ def process_query(query: str, qa_system: DocumentQASystem, current_model: str) -
     try:
         if qa_system.qa_chain:
             result = qa_system.qa_chain({"query": query})
-            response = f"{result['result']}\n来源：{result['source_documents'][0].metadata['source']}"
+            response = f"{result['result']}\nSource:{result['source_documents'][0].metadata['source']}"
         else:
             if not qa_system.conversation_chain:
                 from langchain.chains import ConversationChain
@@ -287,16 +286,16 @@ def process_query(query: str, qa_system: DocumentQASystem, current_model: str) -
 
         print(f"\n{current_model.upper()}:", response)
         
-        # 保存最近的查询和响应，以便反馈
+        # Save recent queries and responses for feedback
         last_query = query
         last_response = response
         last_model = current_model
         
         # 提示用户可以提供反馈
-        print("\n💬 您可以使用 /like 表示赞同，或 /dislike [原因] 表示不赞同")
+        print("\n💬 You can use /like to agree, or /dislike [reason] to disagree.")
 
     except Exception as e:
-        error_msg = f"❌ 处理错误：{str(e)}"
+        error_msg = f"❌ Handling errors:{str(e)}"
         logging.error(error_msg)
         print(error_msg)
 
@@ -305,35 +304,35 @@ def main():
     print_help()
     current_model = qa_system.current_model
     
-    # 确保反馈目录存在
+    # Ensure that the feedback catalog exists
     os.makedirs("./feedback_data", exist_ok=True)
 
     while True:
         try:
-            # 初始化输入收集
+            # Initializing Input Collection
             user_input = []
-            print("\nYou: (输入内容，连按两次回车提交)")
+            print("\nYou: (Type in the content and enter a blank line to submit)")
 
-            # 多行输入循环
+            # Multi-line input loop
             while True:
                 line = input().strip()
 
-                # 退出指令处理
+                # Exit command processing
                 if line.lower() in ["exit", "quit","/exit","/quit"]:
-                    print("👋  再见！")
+                    print("👋  See you next time!")
                     return
 
-                # 命令立即执行
+                # The command is executed immediately
                 if line.startswith("/"):
                     process_command(line, qa_system)
                     current_model = qa_system.current_model
                     break
 
-                # 空行表示提交输入
+                # A blank line indicates that the input is submitted
                 if not line:
                     if user_input:
                         full_query = "\n".join(user_input)
-                        print("🤖 Model思考中......")
+                        print("🤖 Model Thinking......")
                         process_query(full_query, qa_system, current_model)
                     user_input = []
                     break
@@ -341,10 +340,10 @@ def main():
                 user_input.append(line)
 
         except KeyboardInterrupt:
-            print("\n输入中断，输入 exit 退出程序")
+            print("\nEnter interrupt, enter exit to exit the program")
         except Exception as e:
-            logging.error(f"系统错误：{str(e)}")
-            print("❌ 发生意外错误，请重新尝试")
+            logging.error(f"System Error:{str(e)}")
+            print("❌ An unexpected error has occurred, please try again")
 
 if __name__ == "__main__":
     main()

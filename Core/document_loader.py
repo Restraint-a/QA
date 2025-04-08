@@ -11,7 +11,7 @@ from langchain_community.vectorstores import FAISS
 
 device = "cuda" if torch.cuda.is_available() else "cpu"
 def detect_encoding(file_path, max_size=1024*1024):
-    """安全检测文本文件编码"""
+    """Security Detection Text File Encoding"""
     try:
         with open(file_path, 'rb') as f:
             raw_data = b''
@@ -23,17 +23,17 @@ def detect_encoding(file_path, max_size=1024*1024):
                 raw_data += chunk
             return chardet.detect(raw_data)['encoding']
     except Exception as e:
-        logging.error(f"编码检测失败: {str(e)}")
+        logging.error(f"Coding detection fail: {str(e)}")
         return 'utf-8'
 
 def load_document(qa_system, file_path):
-    """文档加载处理"""
-    print(f"📄  读取文件：{file_path}")
+    """Document Loading Process"""
+    print(f"📄  Read file：{file_path}")
     try:
         if not os.path.isfile(file_path):
-            raise ValueError("路径不是文件")
+            raise ValueError("The path is not a file.")
 
-        # 编码检测和备选编码列表
+        # Code detection and alternative code lists
         encoding = detect_encoding(file_path)
         retry_encodings = [encoding, 'utf-8', 'gbk']
 
@@ -46,14 +46,14 @@ def load_document(qa_system, file_path):
             for enc in retry_encodings:
                 try:
                     loader = TextLoader(file_path, encoding=enc)
-                    loader.load()  # 测试加载
+                    loader.load()  # Test loading
                     break
                 except UnicodeDecodeError:
                     continue
 
         documents = loader.load()
 
-        # 使用递归文本分割器对文档进行切分
+        # Slicing and Dicing Documents with Recursive Text Splitters
         text_splitter = RecursiveCharacterTextSplitter(
             chunk_size=1000,
             chunk_overlap=200,
@@ -61,12 +61,11 @@ def load_document(qa_system, file_path):
         )
         docs = text_splitter.split_documents(documents)
 
-        print(f"✅ 成功加载 {len(docs)} 个文本块")
+        print(f"✅ Successfully loaded {len(docs)} blocks of text.")
         if docs:
-            print(f"📝 首文本块示例：{docs[0].page_content[:200]}...")
-            #print(f"📝 文本：{docs}")
+            print(f"📝 Example of a first text block:{docs[0].page_content[:200]}...")
 
-        # 构造向量数据库
+        # Constructing a Vector Database
         embeddings = HuggingFaceEmbeddings(
             model_name="sentence-transformers/all-mpnet-base-v2",
             model_kwargs={"device": device},
@@ -78,7 +77,7 @@ def load_document(qa_system, file_path):
             embeddings
         )
 
-        # 初始化问答链
+        # Initializing the Q&A Chain
         qa_system.qa_chain = RetrievalQA.from_chain_type(
             llm=qa_system.llm_registry[qa_system.current_model],
             chain_type="stuff",
@@ -87,8 +86,8 @@ def load_document(qa_system, file_path):
         )
         return True
     except PermissionError as pe:
-        logging.error(f"❌ 权限拒绝: {str(pe)}")
+        logging.error(f"❌ Privilege denial: {str(pe)}")
         return False
     except Exception as e:
-        logging.error(f"❌ 文档加载异常: {str(e)}")
+        logging.error(f"❌ Document Loading Exception. {str(e)}")
         return False

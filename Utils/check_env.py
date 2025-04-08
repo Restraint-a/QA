@@ -2,20 +2,20 @@
 import sys, torch, numpy
 from langchain_community.embeddings import HuggingFaceEmbeddings
 
-print("[系统信息]")
-print(f"Python版本: {sys.version}")
-print(f"numpy版本: {numpy.__version__}")
-print(f"PyTorch版本: {torch.__version__}")
-print(f"CUDA可用: {torch.cuda.is_available()}")
-print(f"所用设备：{torch.cuda.get_device_name(0)}")
+print("[System Info]")
+print(f"Python version: {sys.version}")
+print(f"numpy version: {numpy.__version__}")
+print(f"PyTorch version: {torch.__version__}")
+print(f"CUDA available: {torch.cuda.is_available()}")
+print(f"Device used:{torch.cuda.get_device_name(0)}")
 
-print("\n[关键功能验证]")
+print("\n[Critical Function Verification]")
 
 try:
     emb = HuggingFaceEmbeddings(model_name="sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2")
-    print("✅ 嵌入模型初始化成功")
-    test_text = "测试中文向量化"
+    print("✅ Embedded model initialization successful")
+    test_text = "Test Chinese vectorization"
     embedding = emb.embed_query(test_text)
-    print(f"向量维度: {len(embedding)}")
+    print(f"Vector Dimension: {len(embedding)}")
 except Exception as e:
-    print(f"❌ 初始化失败: {str(e)}")
+    print(f"❌ Initialization fail: {str(e)}")
