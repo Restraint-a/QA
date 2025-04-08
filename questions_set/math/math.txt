@@ -22,12 +22,6 @@ B.75
 C.90
 D.120
 
-5. If the height of the two cylinders is equal, the ratio of the base radii is 3:2, what is the volume ratio?
-A.3:2
-B.9:4
-C.27:8
-D.6:5
-
 6. An open-air pool filled with water, separately open a drain, 5 hours can discharge a quarter of the total water; Open the B drain separately, and one third of the total water can be discharged in four hours. If the pool only opens the B drain on a rainy day, it takes 20 hours to empty the pool, assuming that the rain water speed is constant, ask how long it takes to drain the water with both A and B drains at the same time in rainy weather.
 A.8 hours
 B. Nine hours
