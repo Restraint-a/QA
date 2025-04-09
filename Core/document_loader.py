@@ -55,8 +55,8 @@ def load_document(qa_system, file_path):
 
         # Slicing and Dicing Documents with Recursive Text Splitters
         text_splitter = RecursiveCharacterTextSplitter(
-            chunk_size=1000,
-            chunk_overlap=200,
+            chunk_size=1500,
+            chunk_overlap=100,
             separators=["\n\n", "\n", "。", "！", "？", "；", "……", "…", "　"]
         )
         docs = text_splitter.split_documents(documents)

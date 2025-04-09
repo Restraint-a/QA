@@ -100,29 +100,63 @@ def visualize_from_excel(excel_path, output_dir=None):
         axs[1, 0].grid(True)
         
         # 4. GPU memory usage (if any)
-        axs[1, 1].set_title('Chunk Size vs GPU Memory Usage')
-        gpu_cols = [col for col in df.columns if 'gpu_' in col and 'diff_mb' in col]
+        axs[1, 1].set_title('Chunk Size vs GPU Memory Peak Usage')
         
-        if gpu_cols:
-            for gpu_col in gpu_cols:
-                device_id = gpu_col.split('_')[1]
+        # Find GPU Peak column
+        gpu_peak_cols = [col for col in df.columns if 'gpu_' in col and 'peak_mb' in col]
+        
+        if gpu_peak_cols:
+            for gpu_col in gpu_peak_cols:
+                device_id = gpu_col.split('_')[1] if len(gpu_col.split('_')) > 1 else '?'
                 for overlap in df['chunk_overlap'].unique():
                     subset = df[df['chunk_overlap'] == overlap]
+                    
+                    # Make sure the data is of numeric type
+                    subset[gpu_col] = pd.to_numeric(subset[gpu_col], errors='coerce')
+                    
                     line, = axs[1, 1].plot(subset['chunk_size'], subset[gpu_col], 'o-', 
                                          label=f'GPU {device_id}, Overlap={overlap}')
                     
-                    # Add data point labels
+                    # Add data point labels and make sure they are numeric values before formatting them
                     for x, y in zip(subset['chunk_size'], subset[gpu_col]):
-                        axs[1, 1].annotate(f'{y:.1f}', (x, y), textcoords="offset points", 
-                                         xytext=(0, 5), ha='center')
+                        if pd.notna(y):  # Check for NaN
+                            axs[1, 1].annotate(f'{float(y):.1f}', (x, y), textcoords="offset points", 
+                                             xytext=(0, 5), ha='center')
                         
             axs[1, 1].set_xlabel('Chunk Size')
-            axs[1, 1].set_ylabel('GPU Memory Change (MB)')
+            axs[1, 1].set_ylabel('GPU Memory Peak (MB)')
             axs[1, 1].legend()
             axs[1, 1].grid(True)
         else:
-            axs[1, 1].text(0.5, 0.5, 'GPU Data Not Available', ha='center', va='center', fontsize=14)
-            axs[1, 1].axis('off')
+            # If can't find the peak_mb column, try using the diff_mb column
+            gpu_diff_cols = [col for col in df.columns if 'gpu_' in col and 'diff_mb' in col]
+            
+            if gpu_diff_cols:
+                for gpu_col in gpu_diff_cols:
+                    device_id = gpu_col.split('_')[1] if len(gpu_col.split('_')) > 1 else '?'
+                    for overlap in df['chunk_overlap'].unique():
+                        subset = df[df['chunk_overlap'] == overlap]
+                        
+                        # Make sure the data is of numeric type
+                        subset[gpu_col] = pd.to_numeric(subset[gpu_col], errors='coerce')
+                        
+                        line, = axs[1, 1].plot(subset['chunk_size'], subset[gpu_col], 'o-', 
+                                             label=f'GPU {device_id}, Overlap={overlap}')
+                        
+                        # Add data point labels and make sure they are numeric values before formatting them
+                        for x, y in zip(subset['chunk_size'], subset[gpu_col]):
+                            if pd.notna(y):  # Check for NaN
+                                axs[1, 1].annotate(f'{float(y):.1f}', (x, y), textcoords="offset points", 
+                                                 xytext=(0, 5), ha='center')
+                            
+                axs[1, 1].set_xlabel('Chunk Size')
+                axs[1, 1].set_ylabel('GPU Memory Change (MB)')
+                axs[1, 1].set_title('Chunk Size vs GPU Memory Usage (Change)')
+                axs[1, 1].legend()
+                axs[1, 1].grid(True)
+            else:
+                axs[1, 1].text(0.5, 0.5, 'GPU Memory Data Not Available', ha='center', va='center', fontsize=14)
+                axs[1, 1].axis('off')
         
         plt.tight_layout()
         
@@ -204,12 +238,12 @@ def main():
             print("❌ Fail to generate visualization charts")
         return 0 if image_path else 1
     
-    # 否则执行完整的分析流程
+    # Otherwise perform a complete analysis process
     if not args.file:
         print("Error: File path not specified.Please specify the document to be analyzed using the --file parameter, or the Excel results file using the --visualize-excel parameter.")
         return 1
         
-    # 验证文件路径
+    # Verify the file path
     if not os.path.isfile(args.file):
         print(f"Error: File does not exist - {args.file}")
         return 1
