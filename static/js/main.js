@@ -1,7 +1,11 @@
 // main.js - Intelligent Q&A System Frontend Interaction Script
 
+// 全局变量
+let messagesContainer;
+
 document.addEventListener('DOMContentLoaded', function() {
     // 获取DOM元素
+    messagesContainer = document.getElementById('chat-messages');
     const chatTab = document.getElementById('chat-tab');
     const uploadTab = document.getElementById('upload-tab');
     const compareTab = document.getElementById('compare-tab');
@@ -48,6 +52,37 @@ document.addEventListener('DOMContentLoaded', function() {
         [chatTab, uploadTab, compareTab, autotestTab].forEach(t => t.classList.remove('active'));
         // 隐藏所有内容区域
         [chatSection, uploadSection, compareSection, autotestSection].forEach(s => s.style.display = 'none');
+        
+        // 如果从上传标签页切换到聊天标签页，调用reset_mode接口
+        if (tab === chatTab && document.querySelector('.document-info') !== null) {
+        // 显示加载中
+        showLoading();
+        
+        // 调用reset_mode接口
+        fetch('/reset_mode', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // 添加系统消息
+                addSystemMessage(data.message);
+                // 清除文档信息标记
+                const docInfo = document.querySelector('.document-info');
+                if (docInfo) {
+                    docInfo.remove();
+                }
+            }
+            hideLoading();
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            hideLoading();
+        });
+        }
         
         // 激活选中的标签页和内容区域
         tab.classList.add('active');
@@ -262,7 +297,14 @@ document.addEventListener('DOMContentLoaded', function() {
                 // 清空文件选择
                 documentFile.value = '';
                 // 添加系统消息
-                addMessage(docChatMessages, `The document "${fileName}" has been successfully loaded and you can now ask questions about the document.`, false, 'System');
+                addMessage(docChatMessages, `Document "${fileName}" loaded sucessfully, you can query now.`, false, 'System');
+                
+                // 添加文档信息标记，用于检测是否处于文档问答模式
+                const docInfo = document.createElement('div');
+                docInfo.className = 'document-info';
+                docInfo.style.display = 'none';
+                docInfo.dataset.filename = fileName;
+                document.body.appendChild(docInfo);
             } else {
                 alert(`Upload Error: ${result.error}`);
             }
@@ -538,3 +580,32 @@ document.addEventListener('DOMContentLoaded', function() {
     addMessage(chatMessages, 'Welcome to the Intelligent Q&A System!Please enter your question.', false, 'System');
     addMessage(docChatMessages, 'Please upload the document first, then you can ask questions about the document.', false, 'System');
 });
+
+
+// 添加系统消息函数
+function addSystemMessage(message) {
+    const messagesContainer = document.getElementById('chat-messages');
+    if (!messagesContainer) return;
+    
+    const messageDiv = document.createElement('div');
+    messageDiv.className = 'message system-message';
+    
+    const headerDiv = document.createElement('div');
+    headerDiv.className = 'message-header';
+    headerDiv.textContent = 'System';
+    messageDiv.appendChild(headerDiv);
+    
+    const contentDiv = document.createElement('div');
+    contentDiv.className = 'message-content';
+    contentDiv.textContent = message;
+    messageDiv.appendChild(contentDiv);
+    
+    const timeDiv = document.createElement('div');
+    timeDiv.className = 'message-time';
+    const now = new Date();
+    timeDiv.textContent = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
+    messageDiv.appendChild(timeDiv);
+    
+    messagesContainer.appendChild(messageDiv);
+    messagesContainer.scrollTop = messagesContainer.scrollHeight;
+}

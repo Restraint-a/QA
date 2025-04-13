@@ -286,6 +286,18 @@ def autotest():
         logging.error(f"Automatically test errors:{str(e)}")
         return jsonify({'error': f"Automatically test errors:{str(e)}"}), 500
 
+# 将reset_mode路由移到if __name__之前
+@app.route('/reset_mode', methods=['POST'])
+def reset_mode():
+    """从文档问答模式切换回普通对话模式"""
+    if qa_system.qa_chain:
+        qa_system.qa_chain = None
+        qa_system.vector_db = None
+        qa_system.conversation_chain = None  # 确保重新初始化对话链
+        return jsonify({'success': True, 'message': 'Return to conversation mode successfully.'})
+    else:
+        return jsonify({'success': True, 'message': 'Already in conversation mode.'})
+
 # Launch the application
 if __name__ == '__main__':
     # Ensure upload and feedback catalogs exist

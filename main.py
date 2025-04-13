@@ -34,6 +34,18 @@ def process_command(command: str, qa_system: DocumentQASystem) -> bool:
             print(f"❌ Invalid model with available options:{list(qa_system.llm_registry.keys())}")
             return False
 
+    # reset from document Q&A mode to conversation mode
+    elif command == "/reset":
+        if qa_system.qa_chain:
+            qa_system.qa_chain = None
+            qa_system.vector_db = None
+            qa_system.conversation_chain = None  # Ensure that conversation chains are reinitialized
+            print("✅ Switched back to conversation mode.")
+            return True
+        else:
+            print("ℹ️ Already in conversation mode.")
+            return True
+
     # Handling user feedback - Agree
     elif command == "/like":
         if not last_query or not last_response:

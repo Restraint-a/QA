@@ -15,6 +15,7 @@ def print_help():
     /compare [Question]         - Compare model performance
     /help                  - Show help
     /upload                - Upload a document to enter document Q&A mode
+    /reset                 - Switch back to normal conversation mode
     /autotest              - Automatic testing
     /like                  - Agree with previous answer
     /dislike [Reason]         - Disagree with previous answer, and provide reasons

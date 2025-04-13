@@ -236,3 +236,20 @@ body {
 .incorrect {
     color: #dc3545;
 }
+
+.system-message {
+    background-color: #f8f9fa;
+    border-left: 4px solid #6c757d;
+    margin-bottom: 10px;
+    padding: 10px;
+    border-radius: 5px;
+}
+
+.system-message .message-header {
+    color: #6c757d;
+    font-weight: bold;
+}
+
+.document-info {
+    display: none;
+}
